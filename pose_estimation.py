@@ -88,7 +88,8 @@ def video_to_listPose(vid):
     # Iterate through every frame in video
     while(cap.isOpened()):
         ret, frame = cap.read() # read current frame
-        if (frame is None): break # If current frame doesn't exist, finished
+        if (frame is None):
+            break # If current frame doesn't exist, finished iterating through frames
         frame = mx.nd.array(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).astype('uint8') # mxnet readable
 
         # Object detection
@@ -98,17 +99,18 @@ def video_to_listPose(vid):
         # Pose estimation
         pose_input, upscale_bbox = detector_to_alpha_pose(frame, class_IDs, scores, bounding_boxs,
                                                           output_shape=(320, 256))
+        if (upscale_bbox is None):
+            break  # If no person detected in current frame, halt the analysis
 
-        if len(upscale_bbox) > 0: # person detected
-            predicted_heatmap = estimator(pose_input)
-            pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
+        predicted_heatmap = estimator(pose_input)
+        pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
 
-            img = cv_plot_keypoints(frame, pred_coords, confidence, class_IDs, bounding_boxs, scores,
-                                    box_thresh=0.5, keypoint_thresh=0.2)
-            ax = plot_debug(img, pred_coords, confidence, class_IDs, bounding_boxs, scores, box_thresh=0.5,
-                            keypoint_thresh=0.2)
+        img = cv_plot_keypoints(frame, pred_coords, confidence, class_IDs, bounding_boxs, scores,
+                                box_thresh=0.5, keypoint_thresh=0.2)
+        #ax = plot_debug(img, pred_coords, confidence, class_IDs, bounding_boxs, scores, box_thresh=0.5,
+                     #   keypoint_thresh=0.2)
         cv_plot_image(img)
-        plt.show()
+        #plt.show()
         cv2.waitKey(1)
     cap.release()
 
@@ -116,12 +118,13 @@ def video_to_listPose(vid):
 def videos_to_jsonPose(vidSide, vidFront):
     video_to_listPose(vidSide)
     #frontView_list = video_to_listPose(vidFront)
-
+    #TODO: Ensure data lists are of same size
 
 #==================================================================================
 #                                   Main
 #==================================================================================
 path = '../Test/'
+vidCoffee = path + 'coffee.mp4'
 vidSide = path + 'Part01test-side.avi'
 vidFront = path + 'Part01test-front.avi'
 videos_to_jsonPose(vidSide, vidFront)
