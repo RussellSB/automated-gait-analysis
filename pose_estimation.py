@@ -35,27 +35,21 @@ estimator = get_model('alpha_pose_resnet101_v1b_coco', pretrained='de56b871')
 detector.hybridize()
 estimator.hybridize()
 
+# Defined to filter out, illogical joints that are not connected in pairs
+joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
+                   [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
+                   [5, 11], [6, 12], [11, 12],
+                   [11, 13], [12, 14], [13, 15], [14, 16]]
+
 #==================================================================================
 #                                   Methods
 #==================================================================================
 # Currently for debugging, seeing that everything is interpreted correctly
 def plot_debug(img, coords, confidence, scores, keypoint_thresh=0.2):
-
-    if isinstance(coords, mx.nd.NDArray):
-        coords = coords.asnumpy()
-    if isinstance(scores, mx.nd.NDArray):
-        scores = scores.asnumpy()
-    if isinstance(confidence, mx.nd.NDArray):
-        confidence = confidence.asnumpy()
-
     joint_visible = confidence[:, :, 0] > keypoint_thresh
-    joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
-                   [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-                   [5, 11], [6, 12], [11, 12],
-                   [11, 13], [12, 14], [13, 15], [14, 16]]
 
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1) # img.shape[1], img.shape[0] (BELOW)
+    ax = fig.add_subplot(1, 1, 1)
     ax.set(xlim=(0, img.shape[1]), ylim = (0, img.shape[0])) # setting width and height of plot
     #ax.invert_yaxis()
 
@@ -67,7 +61,9 @@ def plot_debug(img, coords, confidence, scores, keypoint_thresh=0.2):
         if joint_visible[i, jp[0]] and joint_visible[i, jp[1]]:
             ax.plot(pts[jp, 0], img.shape[0] - pts[jp, 1],
                     linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
-            ax.scatter(pts[jp, 0], img.shape[0] - pts[jp, 1], s=20)
+            x = pts[jp, 0]
+            y = img.shape[0] - pts[jp, 1] # Flipped vertically
+            ax.scatter(x, y, s=20)
 
     return ax
 
@@ -98,6 +94,11 @@ def video_to_listPose(vid):
 
         img = cv_plot_keypoints(frame, pred_coords, confidence, class_IDs, bounding_boxs, scores,
                                 box_thresh=0.5, keypoint_thresh=0.2)
+
+        pred_coords = pred_coords.asnumpy()
+        scores = scores.asnumpy()
+        confidence = confidence.asnumpy()
+
         ax = plot_debug(img, pred_coords, confidence, scores, keypoint_thresh=0.2)
         cv_plot_image(img)
         plt.show()
