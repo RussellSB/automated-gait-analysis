@@ -57,14 +57,36 @@ def plot_debug(img, coords, confidence, scores, keypoint_thresh=0.2):
     colormap_index = np.linspace(0, 1, len(joint_pairs))
     pts = coords[i]
 
+    count = 1 # start from 1, because we neglect the nose in this scenario
     for cm_ind, jp in zip(colormap_index, joint_pairs):
         if joint_visible[i, jp[0]] and joint_visible[i, jp[1]]:
-            ax.plot(pts[jp, 0], img.shape[0] - pts[jp, 1],
-                    linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
             x = pts[jp, 0]
-            y = img.shape[0] - pts[jp, 1] # Flipped vertically
-            ax.scatter(x, y, s=20)
+            y = img.shape[0] - pts[jp, 1]  # Flipped vertically
 
+            ax.plot(x, y,
+                    linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
+            #ax.scatter(x, y, s=20)
+            print(count, ':', jp, ':', x, y)
+        else:
+            print(count, ':', jp, ':', [-1, -1])
+        count += 1
+
+    print('-------------------------------------')
+
+    for j in range(0, len(pts)):
+        if(confidence[i][j] > keypoint_thresh):
+            x = pts[j][0]
+            y = img.shape[0] - pts[j][1]
+            ax.scatter(x, y, s=20)
+            print(j, ':', x, y)
+        else:
+            x = -1
+            y = -1
+            print(j, ':', x, y)
+
+
+
+    print('======================================')
     return ax
 
 # Given one video, returns list of pose information in preparation for json file
