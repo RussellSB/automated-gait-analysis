@@ -35,63 +35,33 @@ estimator = get_model('alpha_pose_resnet101_v1b_coco', pretrained='de56b871')
 detector.hybridize()
 estimator.hybridize()
 
-# Defined to filter out, illogical joints that are not connected in pairs
-joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
-                   [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-                   [5, 11], [6, 12], [11, 12],
-                   [11, 13], [12, 14], [13, 15], [14, 16]]
-
 #==================================================================================
 #                                   Methods
 #==================================================================================
-# Currently for debugging, seeing that everything is interpreted correctly
-def plot_debug(img, coords, confidence, scores, keypoint_thresh=0.2):
-    joint_visible = confidence[:, :, 0] > keypoint_thresh
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set(xlim=(0, img.shape[1]), ylim = (0, img.shape[0])) # setting width and height of plot
-    #ax.invert_yaxis()
-
+# Returns a keypoints with respect to the current frame's pose
+def curr_pose(img, coords, confidence, scores, keypoint_thresh=0.2):
     i = scores.argmax() # gets index of most confident bbox estimation
-    colormap_index = np.linspace(0, 1, len(joint_pairs))
-    pts = coords[i]
+    pts = coords[i] # coords of most confident pose in frame
 
-    count = 1 # start from 1, because we neglect the nose in this scenario
-    for cm_ind, jp in zip(colormap_index, joint_pairs):
-        if joint_visible[i, jp[0]] and joint_visible[i, jp[1]]:
-            x = pts[jp, 0]
-            y = img.shape[0] - pts[jp, 1]  # Flipped vertically
-
-            ax.plot(x, y,
-                    linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
-            #ax.scatter(x, y, s=20)
-            print(count, ':', jp, ':', x, y)
-        else:
-            print(count, ':', jp, ':', [-1, -1])
-        count += 1
-
-    print('-------------------------------------')
+    pose_data = []
 
     for j in range(0, len(pts)):
+        x = -1
+        y = -1
         if(confidence[i][j] > keypoint_thresh):
-            x = pts[j][0]
-            y = img.shape[0] - pts[j][1]
-            ax.scatter(x, y, s=20)
-            print(j, ':', x, y)
-        else:
-            x = -1
-            y = -1
-            print(j, ':', x, y)
+            x = int(pts[j][0])
+            y = int(img.shape[0] - pts[j][1])
+        pose_data.append([x,y])
 
-
-
-    print('======================================')
-    return ax
+    return pose_data
 
 # Given one video, returns list of pose information in preparation for json file
 def video_to_listPose(vid):
     cap = cv2.VideoCapture(vid) # load video
+    frame_count = 0
+    pose_data_vid = []
+    dimensions = (0, 0)
+    frame_length = (int)(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Iterate through every frame in video
     while(cap.isOpened()):
@@ -114,24 +84,49 @@ def video_to_listPose(vid):
         predicted_heatmap = estimator(pose_input)
         pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
 
-        img = cv_plot_keypoints(frame, pred_coords, confidence, class_IDs, bounding_boxs, scores,
-                                box_thresh=0.5, keypoint_thresh=0.2)
-
-        pred_coords = pred_coords.asnumpy()
         scores = scores.asnumpy()
         confidence = confidence.asnumpy()
+        pred_coords = pred_coords.asnumpy()
 
-        ax = plot_debug(img, pred_coords, confidence, scores, keypoint_thresh=0.2)
-        cv_plot_image(img)
-        plt.show()
-        cv2.waitKey(1)
+        # Preparing for json
+        pose_data_curr = curr_pose(frame, pred_coords, confidence, scores, keypoint_thresh=0.2)
+        pose_data_vid.append(pose_data_curr)
+        if(frame_count == 0):
+            dimensions = [frame.shape[1], frame.shape[0]]
+
+        print('Processing:', vid, ':', frame_count + 1, '/', frame_length)
+        frame_count += 1
     cap.release()
 
+    return dimensions, pose_data_vid
+
 # Given two videos it will output the json describing all poses in both videos
-def videos_to_jsonPose(vidSide, vidFront):
-    video_to_listPose(vidSide)
-    #video_to_listPose(vidFront)
-    #TODO: Ensure data lists are of same size
+def videos_to_jsonPose(vidSide, vidFront, isNormal):
+    dimensions_side, pose_vid_side = video_to_listPose(vidSide)
+    dimensions_front, pose_vid_front = video_to_listPose(vidFront)
+
+    if(dimensions_side != dimensions_front):
+        print('Warning: side video', dimensions_side, 'and front video', dimensions_front, 'of different dimensions' )
+
+    if (len(pose_vid_side) != len(pose_vid_front)):
+        print('Warning: side video', len(pose_vid_side), 'and front video', len(pose_vid_front), 'of different frame counts')
+
+    jsonPose_list = []
+    jsonPose_dict = {
+        'id': 'test',
+        'normal': isNormal,
+        'dimS': dimensions_side,
+        'lenS' : len(pose_vid_side),
+        'dimF' : dimensions_front,
+        'lenF' : len(pose_vid_front),
+        'dataS' : pose_vid_side,
+        'dataF' : pose_vid_front
+    }
+    jsonPose_list.append(jsonPose_dict)
+
+    # TODO: Extract filename from vid name
+    with open('test10' + '.json', 'w') as outfile:
+        json.dump(jsonPose_list, outfile, separators=(',', ':'))
 
 #==================================================================================
 #                                   Main
@@ -140,4 +135,7 @@ path = '../Test/'
 vidCoffee = path + 'coffee.mp4'
 vidSide = path + 'Part01test-side.avi'
 vidFront = path + 'Part01test-front.avi'
-videos_to_jsonPose(vidSide, vidFront)
+
+start_time = time.time()
+videos_to_jsonPose(vidSide, vidFront,True)
+print('JSON pose file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
