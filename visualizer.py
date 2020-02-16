@@ -1,21 +1,19 @@
 #==================================================================================
 #                               VISUALIZER
 #----------------------------------------------------------------------------------
-#                           Input: JSON, Output: Pose plot GIFS
-#               Visualizes saved graph structure of poses, shows GIFS
+#                           Input: JSON, Output: Saves plots per frame
+#               Visualizes saved graph structure of poses, saves plots
 #               describing the saved points in action. Great for testing
 #               that videos were pose estimated correctly, before feature
 #               extraction.
 #----------------------------------------------------------------------------------
 #==================================================================================
-# TODO Cater for large json files with more than one capture
 #==================================================================================
 #                                   Imports
 #==================================================================================
 import numpy as np
 import matplotlib.pyplot as plt
 import json
-
 
 #==================================================================================
 #                                   Constants
@@ -32,13 +30,13 @@ colormap_index = np.linspace(0, 1, len(joint_pairs))
 # Saves every pose frame of the video
 def save_poses(data, dim, path, limit):
     i = 1
-    for frame in data:
+    for pose in data:
         fig, ax = plt.subplots()
         ax.set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
 
         for cm_ind, jp in zip(colormap_index, joint_pairs):
-            joint1 = frame[jp[0]]
-            joint2 = frame[jp[1]]
+            joint1 = pose[jp[0]]
+            joint2 = pose[jp[1]]
             if (joint1 > [-1, -1] and joint2 > [-1, -1]):
                 x = [joint1[0], joint2[0]]
                 y = [joint1[1], joint2[1]]
