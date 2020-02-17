@@ -22,15 +22,27 @@ joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
                    [11, 13], [12, 14], [13, 15], [14, 16]]
 colormap_index = np.linspace(0, 1, len(joint_pairs))
 
+ptID = {
+    'nose': 0,
+    'eye_L': 1,'eye_R': 2,
+    'ear_L': 3,'ear_R': 4,
+    'shoulder_L': 5, 'shoulder_R': 6,
+    'elbow_L': 7, 'elbow_R': 8,
+    'wrist_L': 9, 'wrist_R': 10,
+    'hip_L': 11, 'hip_R': 12,
+    'knee_L': 13, 'knee_R': 14,
+    'ankle_L': 15, 'ankle_R': 16
+}
+
 #==================================================================================
 #                                   Methods
 #==================================================================================
 # Calculates angle of joint b
-def calc_angle(threeJoints):
+def calc_angle(joint1, joint2, joint3):
     # Identifying joint positions
-    a = np.array(threeJoints[0])
-    b = np.array(threeJoints[1]) # Main joint
-    c = np.array(threeJoints[2])
+    a = np.array(joint1)
+    b = np.array(joint2) # Main joint
+    c = np.array(joint3)
 
     # Compute vectors from main joint
     ba = a - b
@@ -42,90 +54,76 @@ def calc_angle(threeJoints):
     return np.degrees(angle)
 
 # Traversing through pose to debug
-def kinematics_raw(data, dim, limit):
+def knee_angles_1(data, dim, limit=1000):
     count = 1
-    frames, anglesL, anglesR = [], [], []
+    frames = []
+
+    knee_FlexExt_L = []
+    knee_FlexExt_R = []
+
+    red = "#FF4A7E"
+    blue = "#72B6E9"
+
+    fig, ax = plt.subplots(2, 1)
+    ax[0].set_title('Knee Flex/Extension')
+    ax[1].set_xlabel('Frame (count)')
+    ax[1].set_ylabel(r"${\Theta}$ (degrees)")
+    ax[0].set(xlim=(0, dim[0]), ylim=(0, dim[1]))
+    ax[1].set(xlim=(0, len(data)), ylim=(-20, 80))
 
     for pose in data:
-        fig, axes = plt.subplots(2, 1)
-        axes[0].set_title('Knee Flex/Extension')
-        axes[0].set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
-        axes[1].set(xlim=(0, len(data)), ylim=(-20, 80))  # setting width and height of plot
-        axes[1].set_xlabel('Frame (count)')
-        axes[1].set_ylabel(r"$\dot{\Theta}$ (degrees)")
 
-        kneeL = []
-        kneeR = []
-        xL, yL = [], []
-        xR, yR = [], []
+        frames.append(count)
 
-        for i in range(0, len(pose)):
-            if(i == 11): # HipL
-                xL.append(pose[i][0])
-                yL.append(pose[i][1])
-                kneeL.append(pose[i])
-            if (i == 13):  # KneeL
-                xL.append(pose[i][0])
-                yL.append(pose[i][1])
-                kneeL.append(pose[i])
-            if (i == 15):  # AnkleL
-                xL.append(pose[i][0])
-                yL.append(pose[i][1])
-                kneeL.append(pose[i])
-                angleL = calc_angle(kneeL)
+        # Knee Flexion / Extension
+        #Left
+        hip_L = pose[ptID['hip_L']]
+        knee_L = pose[ptID['knee_L']]
+        ankle_L = pose[ptID['ankle_L']]
 
-                anglesL.append(angleL)
+        x = [hip_L[0], knee_L[0], ankle_L[0]]
+        y = [hip_L[1], knee_L[1], ankle_L[1]]
+        angle = calc_angle(hip_L, knee_L, ankle_L)
+        knee_FlexExt_L.append(angle)
+        ax[0].scatter(x, y, s=20, color=red)
+        ax[0].plot(x, y, color=red)
+        ax[1].plot(frames, knee_FlexExt_L, color=red)
 
-            if (i == 12):  # HipR
-                xR.append(pose[i][0])
-                yR.append(pose[i][1])
-                kneeR.append(pose[i])
-            if (i == 14):  # KneeR
-                xR.append(pose[i][0])
-                yR.append(pose[i][1])
-                kneeR.append(pose[i])
-            if (i == 16):  # AnkleR
-                xR.append(pose[i][0])
-                yR.append(pose[i][1])
-                kneeR.append(pose[i])
-                angleR = calc_angle(kneeR)
+        #Right
+        hip_R = pose[ptID['hip_R']]
+        knee_R = pose[ptID['knee_R']]
+        ankle_R = pose[ptID['ankle_R']]
 
-                frames.append(count)
-                anglesR.append(angleR)
+        x = [hip_R[0], knee_R[0], ankle_R[0]]
+        y = [hip_R[1],knee_R[1], ankle_R[1]]
+        angle = calc_angle(hip_R, knee_R, ankle_R)
+        knee_FlexExt_R.append(angle)
+        ax[0].scatter(x, y, s=20, color=blue)
+        ax[0].plot(x, y, color=blue)
+        ax[1].plot(frames, knee_FlexExt_R, color=blue)
 
-                blue = "#72B6E9"
-                axes[0].plot(xR, yR, color=blue)
-                axes[0].scatter(xR, yR, s=20, color=blue)
-                axes[1].plot(frames, anglesR, blue)
-
-                red = "#FF4A7E"
-                axes[0].plot(xL, yL, color=red)
-                axes[0].scatter(xL, yL, s=20, color=red)
-                axes[1].plot(frames, anglesL, red)
-
-                plt.savefig('../TEST/GIF/knee-F1/' + str(count) + '.svg')
         if(count == limit): break
         count += 1
-
-    return anglesL, anglesR
+    knee_FlexExt = [knee_FlexExt_L, knee_FlexExt_R]
+    plt.show()
+    return knee_FlexExt
 
 # Makes a collection of figures out of what is described in the jsonFile
-def jsonPose_to_pics(jsonFile, path):
+def parse_jsonPose(jsonFile, path):
     with open('test.json', 'r') as f:
         jsonPose = json.load(f)
 
     lenF = jsonPose[0]['lenF']
     lenS = jsonPose[0]['lenS']
-    # limit = min(lenF, lenS)
-    limit = 1000
+    limit = min(lenF, lenS)
 
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    anglesL, anglesR = kinematics_raw(dataS, dimS, limit)
+    knee_FlexExt = knee_angles_1(dataS, dimS, limit)
 
     #dataF = jsonPose[0]['dataF']
     #dimF = jsonPose[0]['dimF']
-    #kinematics_raw(dataF, dimF, limit)
+    #knee_ValgVar = kinematics_raw(dataF, dimF, limit)
 
 path = '../Test/GIF/'
-jsonPose_to_pics('test.json', path)
+parse_jsonPose('test.json', path)
