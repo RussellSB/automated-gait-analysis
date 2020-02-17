@@ -4,3 +4,6 @@ This is my final year project for my BSc. Honours in Artificial Intelligence. A 
 
 ![alt-text](https://github.com/RussellSB/Automated-Gait-Analysis/blob/master/demo/example.gif)
 First step: Extract keypoints from synchronized video sequences using Pre-trained AI models: Object detector YOLOv3, and Pose estimator AlphaPose. Keypoints, represent the point of a joint [x,y]. Pose, is a list of 17 keypoints. Data, is a list of n poses, where n is the number of frames in the video. The concepts are stored in a json.
+
+![alt-text](https://github.com/RussellSB/Automated-Gait-Analysis/blob/master/demo/example2.gif)
+Second step: Exract feauture w.r.t kinematics. Make use of vectors as well as trigonometry for this. So far computed left/right knee flex/extension. TODO: hip, ankle, elbow (extra: hands) (unknown: shoulder? Is it even possible tbh)
