@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 #                           Input: JSON, Output: Gait Cycle graphs
 #               Given a JSON describing poses throughout two video views,
-#               Extracts kinematics and computes kinematic graphs through angles
+#               Extracts kinematics and computes kinematics through joint angles
 #----------------------------------------------------------------------------------
 #==================================================================================
 #==================================================================================
@@ -42,46 +42,72 @@ def calc_angle(threeJoints):
     return np.degrees(angle)
 
 # Traversing through pose to debug
-def plot_debug(data, dim, limit):
+def kinematics_raw(data, dim, limit):
     count = 1
-    fig, ax = plt.subplots()
-    frames, angles = [], []
+    frames, anglesL, anglesR = [], [], []
 
     for pose in data:
-        #print(count)
+        fig, axes = plt.subplots(2, 1)
+        axes[0].set_title('Knee Flex/Extension')
+        axes[0].set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
+        axes[1].set(xlim=(0, len(data)), ylim=(-20, 80))  # setting width and height of plot
+        axes[1].set_xlabel('Frame (count)')
+        axes[1].set_ylabel(r"$\dot{\Theta}$ (degrees)")
 
-        #fig, ax = plt.subplots()
-        #ax.set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
-
-        leftHip = []
-        x, y = [], []
+        kneeL = []
+        kneeR = []
+        xL, yL = [], []
+        xR, yR = [], []
 
         for i in range(0, len(pose)):
-            if(i == 11): # Hip
-                x.append(pose[i][0])
-                y.append(pose[i][1])
-                leftHip.append(pose[i])
-            if (i == 13):  # Knee
-                x.append(pose[i][0])
-                y.append(pose[i][1])
-                leftHip.append(pose[i])
-            if (i == 15):  # Ankle
-                x.append(pose[i][0])
-                y.append(pose[i][1])
-                leftHip.append(pose[i])
-                angle = calc_angle(leftHip)
-                print(count, angle)
+            if(i == 11): # HipL
+                xL.append(pose[i][0])
+                yL.append(pose[i][1])
+                kneeL.append(pose[i])
+            if (i == 13):  # KneeL
+                xL.append(pose[i][0])
+                yL.append(pose[i][1])
+                kneeL.append(pose[i])
+            if (i == 15):  # AnkleL
+                xL.append(pose[i][0])
+                yL.append(pose[i][1])
+                kneeL.append(pose[i])
+                angleL = calc_angle(kneeL)
+
+                anglesL.append(angleL)
+
+            if (i == 12):  # HipR
+                xR.append(pose[i][0])
+                yR.append(pose[i][1])
+                kneeR.append(pose[i])
+            if (i == 14):  # KneeR
+                xR.append(pose[i][0])
+                yR.append(pose[i][1])
+                kneeR.append(pose[i])
+            if (i == 16):  # AnkleR
+                xR.append(pose[i][0])
+                yR.append(pose[i][1])
+                kneeR.append(pose[i])
+                angleR = calc_angle(kneeR)
 
                 frames.append(count)
-                angles.append(angle)
-        #ax.scatter(x, y, s=20)
-        #plt.show()
+                anglesR.append(angleR)
+
+                blue = "#72B6E9"
+                axes[0].plot(xR, yR, color=blue)
+                axes[0].scatter(xR, yR, s=20, color=blue)
+                axes[1].plot(frames, anglesR, blue)
+
+                red = "#FF4A7E"
+                axes[0].plot(xL, yL, color=red)
+                axes[0].scatter(xL, yL, s=20, color=red)
+                axes[1].plot(frames, anglesL, red)
+
+                plt.savefig('../TEST/GIF/knee-F1/' + str(count) + '.svg')
         if(count == limit): break
         count += 1
 
-    ax.plot(frames, angles)
-    plt.show()
-    print('fin')
+    return anglesL, anglesR
 
 # Makes a collection of figures out of what is described in the jsonFile
 def jsonPose_to_pics(jsonFile, path):
@@ -91,15 +117,15 @@ def jsonPose_to_pics(jsonFile, path):
     lenF = jsonPose[0]['lenF']
     lenS = jsonPose[0]['lenS']
     # limit = min(lenF, lenS)
-    limit = 350
+    limit = 1000
 
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    plot_debug(dataS, dimS, limit)
+    anglesL, anglesR = kinematics_raw(dataS, dimS, limit)
 
     #dataF = jsonPose[0]['dataF']
     #dimF = jsonPose[0]['dimF']
-    #calc_angle(dataF, dimF, limit)
+    #kinematics_raw(dataF, dimF, limit)
 
 path = '../Test/GIF/'
 jsonPose_to_pics('test.json', path)
