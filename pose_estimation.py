@@ -111,6 +111,7 @@ def videos_to_jsonPose(vidSide, vidFront, isNormal):
     if (len(pose_vid_side) != len(pose_vid_front)):
         print('Warning: side video', len(pose_vid_side), 'and front video', len(pose_vid_front), 'of different frame counts')
 
+    # TODO: Decide whether save as list of dics (file per participant), or just one dic (file per capture)
     jsonPose_list = []
     jsonPose_dict = {
         'id': 'test',
@@ -125,7 +126,7 @@ def videos_to_jsonPose(vidSide, vidFront, isNormal):
     jsonPose_list.append(jsonPose_dict)
 
     # TODO: Extract filename from vid name
-    with open('test10' + '.json', 'w') as outfile:
+    with open('test' + '.json', 'w') as outfile:
         json.dump(jsonPose_list, outfile, separators=(',', ':'))
 
 #==================================================================================
