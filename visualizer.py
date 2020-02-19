@@ -93,13 +93,17 @@ def plot_angles(angleList, title, yrange):
 # path = '../Test/GIF/'
 # jsonPose_to_plots('test.json', path)
 
-with open('test_anglesFix.json', 'r') as f:
+with open('test_anglesFix_LimInv.json', 'r') as f:
     jsonAngles = json.load(f)
 
 raw_angles = jsonAngles[0]
 knee_FlexExt = raw_angles['knee_FlexExt']
 hip_FlextExt = raw_angles['hip_FlexExt']
+knee_AbdAdd = raw_angles['knee_AbdAdd']
+hip_AbdAdd = raw_angles['hip_AbdAdd']
 
 plot_angles(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
 plot_angles(hip_FlextExt, 'Hip Flexion/Extension', (-20, 60))
+plot_angles(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
+plot_angles(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30))
 

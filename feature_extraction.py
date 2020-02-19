@@ -17,12 +17,6 @@ import time
 #==================================================================================
 #                                   Constants
 #==================================================================================
-joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
-                   [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-                   [5, 11], [6, 12], [11, 12],
-                   [11, 13], [12, 14], [13, 15], [14, 16]]
-colormap_index = np.linspace(0, 1, len(joint_pairs))
-
 ptID = {
     'nose': 0,
     'eye_L': 1,'eye_R': 2,
@@ -38,8 +32,8 @@ ptID = {
 #==================================================================================
 #                                   Methods
 #==================================================================================
-# Calculates joint angle of knee, in terms of flexion and extension
-def calc_knee_angle(hip, knee, ankle, rightToLeft):
+# Calculates joint angle of knee
+def calc_knee_angle(hip, knee, ankle, rightNeg):
     # Identifying joint positions
     a = np.array(hip)
     b = np.array(knee)
@@ -54,12 +48,12 @@ def calc_knee_angle(hip, knee, ankle, rightToLeft):
     angle = np.arccos(cosine_angle)
     angle = np.degrees(angle)
 
-    if(rightToLeft and bc[0] < m_ba[0]): angle = - angle
-    if (not rightToLeft and bc[0] > m_ba[0]): angle = - angle
+    if(rightNeg and bc[0] < m_ba[0]): angle = - angle
+    if (not rightNeg and bc[0] > m_ba[0]): angle = - angle
     return angle
 
-# Calculates joint angle of hip, in terms of flexion and extension
-def calc_hip_angle(hip, knee, rightToLeft):
+# Calculates joint angle of hip
+def calc_hip_angle(hip, knee, rightNeg):
     # Identifying joint positions
     a = np.array(hip) # Main joint
     b = np.array(knee)
@@ -72,32 +66,22 @@ def calc_hip_angle(hip, knee, rightToLeft):
     angle = np.arccos(cosine_angle)
     angle = np.degrees(angle)
 
-    if (rightToLeft and ab[0] > m_N[0]): angle = - angle
-    if (not rightToLeft and ab[0] < m_N[0]): angle = - angle
+    if (rightNeg and ab[0] > m_N[0]): angle = - angle
+    if (not rightNeg and ab[0] < m_N[0]): angle = - angle
     return angle
 
-# Traversing through pose to debug
-def side_angles(dataS, dimS, limit=10000):
+# Traversing through pose to compute kinematics
+def raw_angles(data, dim, rightNeg=False, limit=10000, invert = False):
 
-    knee_FlexExt_L = []
-    knee_FlexExt_R = []
-    hip_FlexExt_L = []
-    hip_FlexExt_R = []
+    print(limit)
+
+    knee_ang_L = []
+    knee_ang_R = []
+    hip_ang_L = []
+    hip_ang_R = []
 
     count = 1
-    frames = []
-
-    # Determines whether walking left to right or right to left (essential for joint angles)
-    pose_init = dataS[0]
-    kneeL_init = pose_init[ptID['knee_L']] # Using knee L as it is the most visible w.r.t gait
-    init_x = kneeL_init[0]
-    max_x = dimS[0]
-    if(init_x > max_x/2): rightToLeft = True
-    else: rightToLeft = False
-
-    for pose in dataS:
-        frames.append(count)
-
+    for pose in data:
         #Left
         hip_L = pose[ptID['hip_L']]
         knee_L = pose[ptID['knee_L']]
@@ -106,10 +90,10 @@ def side_angles(dataS, dimS, limit=10000):
 
         x = [shoulder_L[0], hip_L[0], knee_L[0], ankle_L[0]]
         y = [shoulder_L[1], hip_L[1], knee_L[1], ankle_L[1]]
-        angle = calc_knee_angle(hip_L, knee_L, ankle_L, rightToLeft)
-        knee_FlexExt_L.append(angle)
-        angle = calc_hip_angle(hip_L, knee_L, rightToLeft)
-        hip_FlexExt_L.append(angle)
+        angle = calc_knee_angle(hip_L, knee_L, ankle_L, rightNeg)
+        knee_ang_L.append(angle)
+        angle = calc_hip_angle(hip_L, knee_L, rightNeg)
+        hip_ang_L.append(angle)
 
         #Right
         hip_R = pose[ptID['hip_R']]
@@ -119,41 +103,61 @@ def side_angles(dataS, dimS, limit=10000):
 
         x = [shoulder_R[0], hip_R[0], knee_R[0], ankle_R[0]]
         y = [shoulder_R[1], hip_R[1], knee_R[1], ankle_R[1]]
-        angle = calc_knee_angle(hip_R, knee_R, ankle_R, rightToLeft)
-        knee_FlexExt_R.append(angle)
-        angle = calc_hip_angle(hip_R, knee_R, rightToLeft)
-        hip_FlexExt_R.append(angle)
+
+        if(invert): angle = calc_knee_angle(hip_R, knee_R, ankle_R, not rightNeg)
+        else: angle = calc_knee_angle(hip_R, knee_R, ankle_R, rightNeg)
+
+        knee_ang_R.append(angle)
+        angle = calc_hip_angle(hip_R, knee_R, rightNeg)
+        hip_ang_R.append(angle)
 
         if(count == limit): break
         count += 1
 
-    knee_FlexExt = [knee_FlexExt_L, knee_FlexExt_R]
-    hip_FlexExt = [hip_FlexExt_L, hip_FlexExt_R]
+    knee_ang = [knee_ang_L, knee_ang_R]
+    hip_ang = [hip_ang_L, hip_ang_R]
 
-    return knee_FlexExt, hip_FlexExt
+    return knee_ang, hip_ang
+
+# Checks which direction gait is from side view (affects how angles in saggital plane are calculated)
+def checkGaitDirectionS(dataS, dimS):
+    pose_init = dataS[0]
+    kneeL_init = pose_init[ptID['knee_L']]  # Using knee L as it is the most visible w.r.t gait
+    init_x = kneeL_init[0]
+    max_x = dimS[0]
+    if (init_x > max_x / 2):
+        return True
+    else:
+        return False
 
 # Computes and saves kinematics (joint angles) from poses
 def calc_angles_jsonPose(jsonFile):
     with open(jsonFile, 'r') as f:
         jsonPose = json.load(f)
 
-    lenF = jsonPose[0]['lenF']
-    lenS = jsonPose[0]['lenS']
-    #limit = min(lenF, lenS)
-
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    knee_FlexExt, hip_FlexExt = side_angles(dataS, dimS)
+    dataF = jsonPose[0]['dataF']
+    dimF = jsonPose[0]['dimF']
+    lenS = jsonPose[0]['lenS']
+    lenF = jsonPose[0]['lenF']
+
+    limit = min(lenF, lenS)
+    rightNeg = checkGaitDirectionS(dataS, dimS)
+
+    knee_FlexExt, hip_FlexExt = raw_angles(dataS, dimS, rightNeg, limit)
+    knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, dimF, limit=limit, invert=True)
     jsonDict = {
         'knee_FlexExt' : knee_FlexExt,
-        'hip_FlexExt' : hip_FlexExt
+        'hip_FlexExt' : hip_FlexExt,
+        'knee_AbdAdd' : knee_AbdAdd,
+        'hip_AbdAdd' : hip_AbdAdd
     }
     jsonList = [jsonDict]
 
     #TODO: Decide whether one dic or list of dics (with respect to pose estimation json)
-    with open('test_anglesFix' + '.json', 'w') as outfile:
+    with open('test_anglesFix_LimInv' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
-        print('dumped! at', outfile)
 
     return jsonList
 
