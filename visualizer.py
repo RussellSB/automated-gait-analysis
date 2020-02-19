@@ -93,7 +93,7 @@ def plot_angles(angleList, title, yrange):
 # path = '../Test/GIF/'
 # jsonPose_to_plots('test.json', path)
 
-with open('test_anglesFix_LimInv.json', 'r') as f:
+with open('test_angles3.json', 'r') as f:
     jsonAngles = json.load(f)
 
 raw_angles = jsonAngles[0]

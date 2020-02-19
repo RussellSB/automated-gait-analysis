@@ -10,7 +10,6 @@
 #                                   Imports
 #==================================================================================
 import numpy as np
-import matplotlib.pyplot as plt
 import json
 import time
 
@@ -53,12 +52,12 @@ def calc_knee_angle(hip, knee, ankle, rightNeg):
     return angle
 
 # Calculates joint angle of hip
-def calc_hip_angle(hip, knee, rightNeg):
+def calc_hip_angle(hip, knee, rightNeg, isFlex):
     # Identifying joint positions
     a = np.array(hip) # Main joint
     b = np.array(knee)
 
-    # Compute vectors from main joint
+    # Compute vectors from joints
     ab = b - a
     m_N = np.array([0,-1])
 
@@ -68,10 +67,22 @@ def calc_hip_angle(hip, knee, rightNeg):
 
     if (rightNeg and ab[0] > m_N[0]): angle = - angle
     if (not rightNeg and ab[0] < m_N[0]): angle = - angle
+
+    if(isFlex): angle += 10 # A heuristic for forward pelvic tilt
     return angle
 
+# If angle to be fed in is an outlier, simply return the same angle value as before
+def outlier_check(angle_list, new_angle):
+    if(len(angle_list) == 0): return new_angle
+
+    angle_before = angle_list[-1]
+    if(new_angle > angle_before + 10 or new_angle < angle_before - 10):
+        return angle_before
+    else:
+        return new_angle
+
 # Traversing through pose to compute kinematics
-def raw_angles(data, dim, rightNeg=False, limit=10000, invert = False):
+def raw_angles(data, dim, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
     print(limit)
 
@@ -83,32 +94,29 @@ def raw_angles(data, dim, rightNeg=False, limit=10000, invert = False):
     count = 1
     for pose in data:
         #Left
-        hip_L = pose[ptID['hip_L']]
         knee_L = pose[ptID['knee_L']]
         ankle_L = pose[ptID['ankle_L']]
-        shoulder_L = pose[ptID['shoulder_L']]
+        hip_L = pose[ptID['hip_L']]
 
-        x = [shoulder_L[0], hip_L[0], knee_L[0], ankle_L[0]]
-        y = [shoulder_L[1], hip_L[1], knee_L[1], ankle_L[1]]
         angle = calc_knee_angle(hip_L, knee_L, ankle_L, rightNeg)
+        angle = outlier_check(knee_ang_L, angle)
         knee_ang_L.append(angle)
-        angle = calc_hip_angle(hip_L, knee_L, rightNeg)
+        angle = calc_hip_angle(hip_L, knee_L, rightNeg, isFlex)
+        angle = outlier_check(hip_ang_L, angle)
         hip_ang_L.append(angle)
 
         #Right
-        hip_R = pose[ptID['hip_R']]
         knee_R = pose[ptID['knee_R']]
         ankle_R = pose[ptID['ankle_R']]
-        shoulder_R = pose[ptID['shoulder_R']]
-
-        x = [shoulder_R[0], hip_R[0], knee_R[0], ankle_R[0]]
-        y = [shoulder_R[1], hip_R[1], knee_R[1], ankle_R[1]]
+        hip_R = pose[ptID['hip_R']]
 
         if(invert): angle = calc_knee_angle(hip_R, knee_R, ankle_R, not rightNeg)
         else: angle = calc_knee_angle(hip_R, knee_R, ankle_R, rightNeg)
-
+        angle = outlier_check(knee_ang_R, angle)
         knee_ang_R.append(angle)
-        angle = calc_hip_angle(hip_R, knee_R, rightNeg)
+
+        angle = calc_hip_angle(hip_R, knee_R, rightNeg, isFlex)
+        angle = outlier_check(hip_ang_R, angle)
         hip_ang_R.append(angle)
 
         if(count == limit): break
@@ -142,10 +150,10 @@ def calc_angles_jsonPose(jsonFile):
     lenS = jsonPose[0]['lenS']
     lenF = jsonPose[0]['lenF']
 
-    limit = min(lenF, lenS)
+    limit = max(lenF, lenS) # Can set to min if the same is desired
     rightNeg = checkGaitDirectionS(dataS, dimS)
 
-    knee_FlexExt, hip_FlexExt = raw_angles(dataS, dimS, rightNeg, limit)
+    knee_FlexExt, hip_FlexExt = raw_angles(dataS, dimS, rightNeg, limit, isFlex=True)
     knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, dimF, limit=limit, invert=True)
     jsonDict = {
         'knee_FlexExt' : knee_FlexExt,
@@ -156,7 +164,7 @@ def calc_angles_jsonPose(jsonFile):
     jsonList = [jsonDict]
 
     #TODO: Decide whether one dic or list of dics (with respect to pose estimation json)
-    with open('test_anglesFix_LimInv' + '.json', 'w') as outfile:
+    with open('test_angles3' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
     return jsonList
