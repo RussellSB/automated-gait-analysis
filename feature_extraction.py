@@ -68,7 +68,8 @@ def calc_hip_angle(hip, knee, rightNeg, isFlex):
     if (rightNeg and ab[0] > m_N[0]): angle = - angle
     if (not rightNeg and ab[0] < m_N[0]): angle = - angle
 
-    if(isFlex): angle += 10 # A heuristic for forward pelvic tilt
+    #TODO: Improve: Cater for trough, -10
+    if(isFlex): angle += angle # A heuristic for forward pelvic tilt
     return angle
 
 # If angle to be fed in is an outlier, simply return the same angle value as before
