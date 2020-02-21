@@ -16,12 +16,6 @@ import json
 #==================================================================================
 #                                   Constants
 #==================================================================================
-joint_pairs = [[0, 1], [1, 3], [0, 2], [2, 4],
-                   [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-                   [5, 11], [6, 12], [11, 12],
-                   [11, 13], [12, 14], [13, 15], [14, 16]]
-colormap_index = np.linspace(0, 1, len(joint_pairs))
-
 ptID = {
     'nose': 0,
     'eye_L': 1,'eye_R': 2,
@@ -38,7 +32,20 @@ ptID = {
 #                                   Methods
 #==================================================================================
 # Plots left and right kinematics
-def plot_angles(angleList, title, yrange):
+def plot_angles(angleList, title, yrange, isRed):
+    if(isRed): color = "#FF4A7E"
+    else: color = "#72B6E9"
+    xmax = len(angleList)
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Frame (count)')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(angleList, color=color)
+    plt.show()
+
+# Plots left and right kinematics
+def plot_anglesLR(angleList, title, yrange):
     red = "#FF4A7E"
     blue = "#72B6E9"
 
@@ -60,7 +67,100 @@ def plot_angles(angleList, title, yrange):
 
     plt.show()
 
-# exponential moving average
+def plot_gc(gc, title, yrange, isRed):
+    for angleList in gc:
+        plot_angles(angleList, title, yrange, isRed)
+
+with open('test.json', 'r') as f:
+    jsonPose = json.load(f)
+
+dataS = jsonPose[0]['dataS']
+dimS = jsonPose[0]['dimS']
+dataF = jsonPose[0]['dataF']
+dimF = jsonPose[0]['dimF']
+lenS = jsonPose[0]['lenS']
+
+with open('test_angles3.json', 'r') as f:
+    jsonAngles = json.load(f)
+raw_angles = jsonAngles[0]
+
+knee_FlexExt = raw_angles['knee_FlexExt']
+hip_FlexExt = raw_angles['hip_FlexExt']
+knee_AbdAdd = raw_angles['knee_AbdAdd']
+hip_AbdAdd = raw_angles['hip_AbdAdd']
+
+# TODO: Test that it works for other participants too
+# Returns list of frames where step on of a particular leg occurs
+def getStepOnFrames(dataS, L_or_R, hist, avg_thresh):
+    ankle_points = []
+    isGrounded_srs = []
+    stepOnFrames = []
+
+    seekStepOn = True
+
+    for i in range(0, len(dataS)):
+        pose = dataS[i]
+        isGrounded = False
+
+        ankle_pos = pose[ptID['ankle_' + L_or_R]]
+        ankle_X = ankle_pos[0]
+        ankle_Y = ankle_pos[1]
+
+        if (i > 0):
+            ankle_pos_prev = ankle_points[-1]
+            ankle_X_prev = ankle_pos_prev[0]
+            ankle_Y_prev = ankle_pos_prev[1]
+
+            X_diff = pow(abs(ankle_X - ankle_X_prev), 2)
+            Y_diff = pow(abs(ankle_Y - ankle_Y_prev), 1)
+
+            abs_diff = Y_diff + X_diff
+
+            if (abs_diff < 5): isGrounded = True
+
+            isGrounded_recent = isGrounded_srs[-hist:]
+            isGrounded_avg = sum(isGrounded_recent)/len(isGrounded_recent)
+
+            #print(i, abs_diff, isGrounded, isGrounded_avg)
+
+            if(seekStepOn):
+                if(isGrounded_avg > avg_thresh):
+                    stepOnFrames.append(i-hist)
+                    seekStepOn = False
+            else:
+                if(isGrounded_avg == 0):
+                    seekStepOn = True
+
+        ankle_points.append(pose[ptID['ankle_' + L_or_R]])
+        isGrounded_srs.append(isGrounded)
+    return stepOnFrames
+
+# Returns set of subsets for gait cycles
+def gaitCycle_filter(angle_list, stepOnFrames):
+    gc = [] # gait cycle list to store subsets
+    for i in range(len(stepOnFrames) - 1, 0, -1):
+        end = stepOnFrames[i] - 1
+        start = stepOnFrames[i-1]
+
+        if(start >= 0):
+            print(end, start)
+            subset = angle_list[start:end]
+            gc.append(subset)
+    return gc
+
+stepOnFrames_L = getStepOnFrames(dataS, 'L',  6, 0.6)
+gc_hip_FlexExt_L = gaitCycle_filter(hip_FlexExt[0], stepOnFrames_L)
+stepOnFrames_R = getStepOnFrames(dataS, 'R',  6, 0.6)
+gc_hip_FlexExt_R = gaitCycle_filter(hip_FlexExt[1], stepOnFrames_R)
+
+plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))
+plot_gc(gc_hip_FlexExt_L, 'Hip Flexion/Extension', (-20, 60), True)
+plot_gc(gc_hip_FlexExt_R, 'Hip Flexion/Extension', (-20, 60), False)
+
+
+##########################################################################
+
+# Exponential moving average for a list (naive smoothing)
 def smooth(angle_list, weight):  # Weight between 0 and 1
     last = angle_list[0]  # First value in the plot (first timestep)
     smoothed = []
@@ -70,7 +170,7 @@ def smooth(angle_list, weight):  # Weight between 0 and 1
         last = smoothed_val                                  # Anchor the last smoothed value
     return smoothed
 
-#TODO: Try out other smoothing methods, focus on gait cycle extraction
+#TODO: Try out other smoothing methods, but rn focus on gait cycle extraction
 def smoothLR(angles_list, weight):
     angles_L = angles_list[0]
     angles_R = angles_list[1]
@@ -80,27 +180,13 @@ def smoothLR(angles_list, weight):
 
     return smoothed_LR
 
-with open('test_angles3.json', 'r') as f:
-    jsonAngles = json.load(f)
+# weight = 0.8
+# knee_FlexExt1 = smoothLR(knee_FlexExt, weight)
+# hip_FlexExt1 = smoothLR(hip_FlexExt, weight)
+# knee_AbdAdd1 = smoothLR(knee_AbdAdd, weight)
+# hip_AbdAdd1 = smoothLR(hip_AbdAdd, weight)
 
-raw_angles = jsonAngles[0]
-
-knee_FlexExt = raw_angles['knee_FlexExt']
-hip_FlexExt = raw_angles['hip_FlexExt']
-knee_AbdAdd = raw_angles['knee_AbdAdd']
-hip_AbdAdd = raw_angles['hip_AbdAdd']
-
-weight = 0.8
-knee_FlexExt1 = smoothLR(knee_FlexExt, weight)
-hip_FlexExt1 = smoothLR(hip_FlexExt, weight)
-knee_AbdAdd1 = smoothLR(knee_AbdAdd, weight)
-hip_AbdAdd1 = smoothLR(hip_AbdAdd, weight)
-
-plot_angles(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
-plot_angles(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80))
-plot_angles(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))
-plot_angles(hip_FlexExt1, 'Hip Flexion/Extension', (-20, 60))
-plot_angles(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
-plot_angles(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20)) #TODO: Cater for gaps
-plot_angles(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30))
-plot_angles(hip_AbdAdd1, 'Hip Abduction/Adduction', (-30, 30))
+# plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
+# plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))
+# plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
+# plot_anglesLR(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30))
