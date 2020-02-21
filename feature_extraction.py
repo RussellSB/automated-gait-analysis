@@ -170,6 +170,10 @@ def calc_angles_jsonPose(jsonFile):
 
     return jsonList
 
+#==================================================================================
+#                                   Main
+#==================================================================================
+
 jsonFile = 'test.json'
 start_time = time.time()
 test = calc_angles_jsonPose(jsonFile)
