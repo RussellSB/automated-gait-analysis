@@ -11,6 +11,7 @@
 #==================================================================================
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import signal
 import json
 
 #==================================================================================
@@ -142,8 +143,35 @@ def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
     gc = [gc_L, gc_R]
     return gc
 
+# Normalizes the xrange to a sample of N data points
+def resample_gcLR(gcLR, N):
+    gcL = gcLR[0]
+    gcR = gcLR[1]
+    gcLR_resampled = [[], []]
+
+    for angleList in gcL:
+        angleList = signal.resample(angleList, N)
+        gcLR_resampled[0].append(angleList)
+
+    for angleList in gcR:
+        angleList = signal.resample(angleList, N)
+        gcLR_resampled[1].append(angleList)
+
+    return gcLR_resampled
+
+# Returns average of left and right gait cycles respectively
+def avg_gcLR(gcLR):
+    gcL = gcLR[0]
+    gcR = gcLR[1]
+
+    for angleList in gcL:
+        print('TODO')
+
+    for angleList in gcR:
+        print('TODO')
+
 # Exponential moving average for a list (naive smoothing)
-def smooth(angle_list, weight):  # Weight between 0 and 1
+def smooth1(angle_list, weight):  # Weight between 0 and 1
     last = angle_list[0]  # First value in the plot (first timestep)
     smoothed = []
     for angle in angle_list:
@@ -152,12 +180,16 @@ def smooth(angle_list, weight):  # Weight between 0 and 1
         last = smoothed_val # Anchor the last smoothed value
     return smoothed
 
+# Low pass butterworth smoothing filter
+def smooth2():  # Weight between 0 and 1
+    print('S')
+
 #TODO: Try out other smoothing methods, but rn focus on gait cycle extraction
 def smoothLR(angles_list, weight):
     angles_L = angles_list[0]
     angles_R = angles_list[1]
-    smooth_L = smooth(angles_L, weight)
-    smooth_R = smooth(angles_R, weight)
+    smooth_L = smooth1(angles_L, weight)
+    smooth_R = smooth1(angles_R, weight)
     smoothed_LR = [smooth_L, smooth_R]
 
     return smoothed_LR
@@ -199,13 +231,19 @@ hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 knee_AbdAdd2 = gcLR(knee_AbdAdd, stepOnFrames_L, stepOnFrames_R)
 hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 
+# Resampling to 100
+knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 100)
+hip_FlexExt3 = resample_gcLR(hip_FlexExt2, 100)
+knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 100)
+hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 100)
+
 plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
 plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80))
-plot_gcLR(knee_FlexExt2, 'Knee Flexion/Extension', (-20, 80))
+plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80))
 
-plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
-plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
-plot_gcLR(knee_AbdAdd2, 'Knee Abduction/Adduction', (-20, 20))
+#plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
+#plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
+#plot_gcLR(knee_AbdAdd2, 'Knee Abduction/Adduction', (-20, 20))
 
 
 # plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
