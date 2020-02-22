@@ -49,7 +49,7 @@ def calc_knee_angle(hip, knee, ankle, rightNeg):
 
     if(rightNeg and bc[0] < m_ba[0]): angle = - angle
     if (not rightNeg and bc[0] > m_ba[0]): angle = - angle
-    return angle
+    return angle.tolist()
 
 # Calculates joint angle of hip
 def calc_hip_angle(hip, knee, rightNeg, isFlex):
@@ -68,9 +68,8 @@ def calc_hip_angle(hip, knee, rightNeg, isFlex):
     if (rightNeg and ab[0] > m_N[0]): angle = - angle
     if (not rightNeg and ab[0] < m_N[0]): angle = - angle
 
-    #TODO: Improve: Cater for trough, -10
-    if(isFlex): angle += angle # A heuristic for forward pelvic tilt
-    return angle
+    if(isFlex): angle = angle * 4/3 # A heuristic for catering for forward/backward pelvic tilt
+    return angle.tolist()
 
 # If angle to be fed in is an outlier, simply return the same angle value as before
 def outlier_check(angle_list, new_angle):
@@ -163,7 +162,7 @@ def calc_angles_jsonPose(jsonFile):
     jsonList = [jsonDict]
 
     #TODO: Decide whether one dic or list of dics (with respect to pose estimation json)
-    with open('test_angles3' + '.json', 'w') as outfile:
+    with open('test_angles' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
     return jsonList

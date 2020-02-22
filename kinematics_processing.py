@@ -315,12 +315,17 @@ hip_FlexExt4 = avg_gcLR(hip_FlexExt3)
 knee_AbdAdd4 = avg_gcLR(knee_AbdAdd3)
 hip_AbdAdd4 = avg_gcLR(hip_AbdAdd3)
 
-plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80)) # Orig
-plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill
-# plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + Smoothing
+#plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80)) # Orig
+#plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill
+#plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + Smoothing
+#plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
+#plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
 
-plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
-plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
+plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60)) # Orig
+plot_anglesLR(hip_FlexExt1, 'Hip Flexion/Extension', (-20, 60)) # Gap Fill
+plot_gcLR(hip_FlexExt3, 'Hip Flexion/Extension', (-20, 60)) # Gait cycle splitting + Smoothing
+plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=False) # Avg and std
+plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=True) # Avg and std
 
 # plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
 # plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
