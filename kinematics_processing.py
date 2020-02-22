@@ -3,17 +3,17 @@
 #----------------------------------------------------------------------------------
 #                    Input: Pose Json and Raw angles, Output: Gait Cycle graphs
 #               Given a JSON describing angles of joints throughout a walk,
-#               Smoothens kinematics and averages to one standard gait cycle.
+#               Smooth kinematics and averages to one standard gait cycle.
 #----------------------------------------------------------------------------------
 #==================================================================================
 #==================================================================================
 #                                   Imports
 #==================================================================================
-import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-import json
 import pandas as pd
+import numpy as np
+import json
 
 #==================================================================================
 #                                   Constants
@@ -30,45 +30,11 @@ ptID = {
     'ankle_L': 15, 'ankle_R': 16
 }
 
+red = "#FF4A7E"
+blue = "#72B6E9"
 #==================================================================================
 #                                   Methods
 #==================================================================================
-# Plots left and right kinematics
-def plot_angles(angleList, title, yrange, isRed):
-    if(isRed): color = "#FF4A7E"
-    else: color = "#72B6E9"
-    xmax = len(angleList)
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-    ax.plot(angleList, color=color)
-    plt.show()
-
-# Plots left and right kinematics
-def plot_anglesLR(angleList, title, yrange):
-    red = "#FF4A7E"
-    blue = "#72B6E9"
-
-    leftMax = len(angleList[0])
-    rightMax = len(angleList[1])
-    xmax = max(leftMax, rightMax)
-
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-
-    leftAngles = angleList[0]
-    rightAngles = angleList[1]
-
-    ax.plot(leftAngles, color=red)
-    ax.plot(rightAngles, color=blue)
-
-    plt.show()
-
 # Filling in gaps, to cater for low confidence in estimation
 def gapfill(angleList):
     df = pd.DataFrame({'ang': angleList})
@@ -84,6 +50,25 @@ def gapfillLR(angLR):
     filledR = gapfill(angR)
     angLR_filled = [filledL, filledR]
     return angLR_filled
+
+# Exponential moving average for a list (naive smoothing)
+def smooth1(angle_list, weight):  # Weight between 0 and 1
+    last = angle_list[0]  # First value in the plot (first timestep)
+    smoothed = []
+    for angle in angle_list:
+        smoothed_val = last * weight + (1 - weight) * angle  # Calculate smoothed value
+        smoothed.append(smoothed_val) # Save it
+        last = smoothed_val # Anchor the last smoothed value
+    return smoothed
+
+def smoothLR(angles_list, weight):
+    angles_L = angles_list[0]
+    angles_R = angles_list[1]
+    smooth_L = smooth1(angles_L, weight)
+    smooth_R = smooth1(angles_R, weight)
+    smoothed_LR = [smooth_L, smooth_R]
+
+    return smoothed_LR
 
 # TODO: Test that it works for other participants too
 # Returns list of frames where step on of a particular leg occurs
@@ -168,8 +153,57 @@ def resample_gcLR(gcLR, N):
 
 # Returns average of left and right gait cycles respectively
 def avg_gcLR(gcLR):
-    gcL = gcLR[0]
-    gcR = gcLR[1]
+    gcL = np.array(gcLR[0]) # list of left gait cycles
+    gcR = np.array(gcLR[1]) # list of right gait cycles
+
+    gcL_avg = np.mean(gcL, axis=0)
+    gcL_std = np.std(gcL, axis=0)
+
+    gcR_avg = np.mean(gcR, axis=0)
+    gcR_std = np.std(gcR, axis=0)
+
+    avg_gcLR = {
+        'gcL_avg' : gcL_avg.tolist(),
+        'gcL_std' : gcL_std.tolist(),
+        'gcR_avg': gcR_avg.tolist(),
+        'gcR_std': gcR_std.tolist(),
+        'gcL_count' : len(gcL),
+        'gcR_count' : len(gcR)
+    }
+    return avg_gcLR
+
+# Plots kinematics of left or right leg
+def plot_angles(angleList, title, yrange, isRed):
+    if(isRed): color = red
+    else: color = blue
+    xmax = len(angleList)
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Frame (count)')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(angleList, color=color)
+    plt.show()
+
+# Plots left and right kinematics
+def plot_anglesLR(angleList, title, yrange):
+    leftMax = len(angleList[0])
+    rightMax = len(angleList[1])
+    xmax = max(leftMax, rightMax)
+
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Frame (count)')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+
+    leftAngles = angleList[0]
+    rightAngles = angleList[1]
+
+    ax.plot(leftAngles, color=red)
+    ax.plot(rightAngles, color=blue)
+
+    plt.show()
 
 # Plots each angle list gait cycle in list
 def plot_gc(gc, title, yrange, isRed):
@@ -181,29 +215,55 @@ def plot_gcLR(gcLR, title, yrange):
     plot_gc(gcLR[0], title, yrange, True)
     plot_gc(gcLR[1], title, yrange, False)
 
-# Exponential moving average for a list (naive smoothing)
-def smooth1(angle_list, weight):  # Weight between 0 and 1
-    last = angle_list[0]  # First value in the plot (first timestep)
-    smoothed = []
-    for angle in angle_list:
-        smoothed_val = last * weight + (1 - weight) * angle  # Calculate smoothed value
-        smoothed.append(smoothed_val) # Save it
-        last = smoothed_val # Anchor the last smoothed value
-    return smoothed
+# Plots average as well as standard deviation
+def plot_avg(avg, std, title, yrange, N, isRed):
+    if (isRed):
+        color = red
+    else:
+        color = blue
 
-def smoothLR(angles_list, weight):
-    angles_L = angles_list[0]
-    angles_R = angles_list[1]
-    smooth_L = smooth1(angles_L, weight)
-    smooth_R = smooth1(angles_R, weight)
-    smoothed_LR = [smooth_L, smooth_R]
+    xmax = len(avg)
+    fig, ax = plt.subplots()
+    ax.set_title(title + ' (' + str(N) + ' Gait Cycles)')
+    ax.set_xlabel('Data points')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(avg, color=color)
 
-    return smoothed_LR
+    std1_gcL = (np.array(avg) + np.array(std)).tolist()
+    std2_gcL = (np.array(avg) - np.array(std)).tolist()
+    ax.plot(std1_gcL, '--', color=color)
+    ax.plot(std2_gcL, '--', color=color)
+
+# Plots left and right average as well as standard deviation
+def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
+    avg_gcL = avg_LR['gcL_avg']
+    avg_gcR = avg_LR['gcR_avg']
+    std_gcL = avg_LR['gcL_std']
+    std_gcR = avg_LR['gcR_std']
+    N_L = avg_LR['gcL_count']
+    N_R = avg_LR['gcR_count']
+
+    if(not plotSep):
+        leftMax = len(avg_gcL)
+        rightMax = len(avg_gcR)
+        xmax = max(leftMax, rightMax)
+        fig, ax = plt.subplots()
+        ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
+        ax.set_xlabel('Data points')
+        ax.set_ylabel(r"${\Theta}$ (degrees)")
+        ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+        ax.plot(avg_gcL, color=red)
+        ax.plot(avg_gcR, color=blue)
+        plt.show()
+    else:
+        plot_avg(avg_gcL, std_gcL, title, yrange, N_L, isRed=True)
+        plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
+        plt.show()
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-
 with open('test.json', 'r') as f:
     jsonPose = json.load(f)
 
@@ -243,19 +303,28 @@ hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 
-# Resampling to 100
-knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 100)
-hip_FlexExt3 = resample_gcLR(hip_FlexExt2, 100)
-knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 100)
-hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 100)
+# Resampling to 100 (100 and 0 inclusive)
+knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
+hip_FlexExt3 = resample_gcLR(hip_FlexExt2, 101)
+knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 101)
+hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 101)
 
-plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
-plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80))
-plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80))
+# Averaging
+knee_FlexExt4 = avg_gcLR(knee_FlexExt3)
+hip_FlexExt4 = avg_gcLR(hip_FlexExt3)
+knee_AbdAdd4 = avg_gcLR(knee_AbdAdd3)
+hip_AbdAdd4 = avg_gcLR(hip_AbdAdd3)
 
-plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
-plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
-plot_gcLR(knee_AbdAdd3, 'Knee Abduction/Adduction', (-20, 20))
+plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80)) # Orig
+plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill
+# plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + Smoothing
+
+plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
+plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
+
+# plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
+# plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
+# plot_gcLR(knee_AbdAdd3, 'Knee Abduction/Adduction', (-20, 20))
 
 # plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
 # plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))

@@ -83,9 +83,7 @@ def outlier_check(angle_list, new_angle):
         return new_angle
 
 # Traversing through pose to compute kinematics
-def raw_angles(data, dim, rightNeg=False, limit=10000, invert = False, isFlex=False):
-
-    print(limit)
+def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
     knee_ang_L = []
     knee_ang_R = []
@@ -154,8 +152,8 @@ def calc_angles_jsonPose(jsonFile):
     limit = max(lenF, lenS) # Can set to min if the same is desired
     rightNeg = checkGaitDirectionS(dataS, dimS)
 
-    knee_FlexExt, hip_FlexExt = raw_angles(dataS, dimS, rightNeg, limit, isFlex=True)
-    knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, dimF, limit=limit, invert=True)
+    knee_FlexExt, hip_FlexExt = raw_angles(dataS, rightNeg, limit, isFlex=True)
+    knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, limit=limit, invert=True)
     jsonDict = {
         'knee_FlexExt' : knee_FlexExt,
         'hip_FlexExt' : hip_FlexExt,
