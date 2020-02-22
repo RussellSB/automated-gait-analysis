@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 import json
+import pandas as pd
 
 #==================================================================================
 #                                   Constants
@@ -68,15 +69,21 @@ def plot_anglesLR(angleList, title, yrange):
 
     plt.show()
 
-# Plots each angle list gait cycle in list
-def plot_gc(gc, title, yrange, isRed):
-    for angleList in gc:
-        plot_angles(angleList, title, yrange, isRed)
+# Filling in gaps, to cater for low confidence in estimation
+def gapfill(angleList):
+    df = pd.DataFrame({'ang': angleList})
+    df['ang'].interpolate(method='linear', inplace=True)
+    return df['ang'].tolist()
 
-# Plots left and right gait cycles
-def plot_gcLR(gcLR, title, yrange):
-    plot_gc(gcLR[0], title, yrange, True)
-    plot_gc(gcLR[1], title, yrange, False)
+# Fills gaps of left and right kinematics
+def gapfillLR(angLR):
+    angL = angLR[0]
+    angR = angLR[1]
+
+    filledL = gapfill(angL)
+    filledR = gapfill(angR)
+    angLR_filled = [filledL, filledR]
+    return angLR_filled
 
 # TODO: Test that it works for other participants too
 # Returns list of frames where step on of a particular leg occurs
@@ -150,12 +157,12 @@ def resample_gcLR(gcLR, N):
     gcLR_resampled = [[], []]
 
     for angleList in gcL:
-        angleList = signal.resample(angleList, N)
-        gcLR_resampled[0].append(angleList)
+        angleListL = signal.resample(angleList, N)
+        gcLR_resampled[0].append(angleListL)
 
     for angleList in gcR:
-        angleList = signal.resample(angleList, N)
-        gcLR_resampled[1].append(angleList)
+        angleListR = signal.resample(angleList, N)
+        gcLR_resampled[1].append(angleListR)
 
     return gcLR_resampled
 
@@ -164,11 +171,15 @@ def avg_gcLR(gcLR):
     gcL = gcLR[0]
     gcR = gcLR[1]
 
-    for angleList in gcL:
-        print('TODO')
+# Plots each angle list gait cycle in list
+def plot_gc(gc, title, yrange, isRed):
+    for angleList in gc:
+        plot_angles(angleList, title, yrange, isRed)
 
-    for angleList in gcR:
-        print('TODO')
+# Plots left and right gait cycles
+def plot_gcLR(gcLR, title, yrange):
+    plot_gc(gcLR[0], title, yrange, True)
+    plot_gc(gcLR[1], title, yrange, False)
 
 # Exponential moving average for a list (naive smoothing)
 def smooth1(angle_list, weight):  # Weight between 0 and 1
@@ -180,11 +191,6 @@ def smooth1(angle_list, weight):  # Weight between 0 and 1
         last = smoothed_val # Anchor the last smoothed value
     return smoothed
 
-# Low pass butterworth smoothing filter
-def smooth2():  # Weight between 0 and 1
-    print('S')
-
-#TODO: Try out other smoothing methods, but rn focus on gait cycle extraction
 def smoothLR(angles_list, weight):
     angles_L = angles_list[0]
     angles_R = angles_list[1]
@@ -216,19 +222,25 @@ hip_FlexExt = raw_angles['hip_FlexExt']
 knee_AbdAdd = raw_angles['knee_AbdAdd']
 hip_AbdAdd = raw_angles['hip_AbdAdd']
 
+# Gap filling
+knee_FlexExt0 = gapfillLR(knee_FlexExt)
+hip_FlexExt0 = gapfillLR(hip_FlexExt)
+knee_AbdAdd0 = gapfillLR(knee_AbdAdd)
+hip_AbdAdd0 = gapfillLR(hip_AbdAdd)
+
 # Smoothing
 weight = 0.8
-knee_FlexExt1 = smoothLR(knee_FlexExt, weight)
-hip_FlexExt1 = smoothLR(hip_FlexExt, weight)
-knee_AbdAdd1 = smoothLR(knee_AbdAdd, weight)
-hip_AbdAdd1 = smoothLR(hip_AbdAdd, weight)
+knee_FlexExt1 = smoothLR(knee_FlexExt0, weight)
+hip_FlexExt1 = smoothLR(hip_FlexExt0, weight)
+knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
+hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
 # Slicing into gait cycles
 stepOnFrames_L = getStepOnFrames(dataS, 'L',  6, 0.6)
 stepOnFrames_R = getStepOnFrames(dataS, 'R',  6, 0.6)
 knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
-knee_AbdAdd2 = gcLR(knee_AbdAdd, stepOnFrames_L, stepOnFrames_R)
+knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 
 # Resampling to 100
@@ -241,10 +253,9 @@ plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
 plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80))
 plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80))
 
-#plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
-#plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
-#plot_gcLR(knee_AbdAdd2, 'Knee Abduction/Adduction', (-20, 20))
-
+plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
+plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))
+plot_gcLR(knee_AbdAdd3, 'Knee Abduction/Adduction', (-20, 20))
 
 # plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80))
 # plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))
