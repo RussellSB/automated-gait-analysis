@@ -8,7 +8,7 @@ First step: Extract keypoints from synchronized video sequences using Pre-traine
 <p align="center">
   <img src="https://github.com/RussellSB/Automated-Gait-Analysis/blob/master/demo/example2.gif">
 </p>
-Second step: Extract raw angle kinematics
+Second step: Extract raw angle kinematics. As demonstrated above knee flexion and extension is computed using the side view. In general hip flexion and extension is computed using the side view also, while hip and knee abduction/adduction are computed using the front view.
 
 <p align="center">
   <img src="https://github.com/RussellSB/automated-gait-analysis/blob/master/demo/example3_1.png">
