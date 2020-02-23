@@ -10,4 +10,10 @@ First step: Extract keypoints from synchronized video sequences using Pre-traine
 </p>
 Second step: Extract raw angle kinematics
 
-Third step: Process kinematics.
+<p align="center">
+  <img src="https://github.com/RussellSB/automated-gait-analysis/blob/master/demo/example3_1.png">
+</p>
+<p align="center">
+  <img src="https://github.com/RussellSB/automated-gait-analysis/blob/master/demo/example3_2.png">
+</p>
+Third step: Process kinematics. The pipeline for following follows: gap filling, smoothing, gait cycle slicing, resampling and finally averaging. In the first picture above we see an example of smoothing whereas in the second we see the average gait cycle of knee flexion taken from a single capture.
