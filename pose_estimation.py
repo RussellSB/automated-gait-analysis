@@ -58,6 +58,10 @@ def curr_pose(img, coords, confidence, scores, keypoint_thresh=0.2):
 # Given one video, returns list of pose information in preparation for json file
 def video_to_listPose(vid):
     cap = cv2.VideoCapture(vid) # load video
+    if (cap.isOpened() == False): # Check if camera opened successfully
+        print("Error opening video stream or file")
+        return
+
     frame_count = 0
     pose_data_vid = []
     dimensions = (0, 0)
@@ -78,23 +82,25 @@ def video_to_listPose(vid):
         # Pose estimation
         pose_input, upscale_bbox = detector_to_alpha_pose(frame, class_IDs, scores, bounding_boxs,
                                                           output_shape=(320, 256))
-        if (upscale_bbox is None):
-            break  # If no person detected in current frame, halt the analysis
+        # Gets current pose keypoints
+        if (upscale_bbox is None): # Caters for no person detection
+            print('No person:', vid, ':', frame_count + 1, '/', frame_length)
+            pose_data_curr = [[-1, -1] for i in range(0, 17)]
+        else: # Caters for person detection
+            print('Processing:', vid, ':', frame_count + 1, '/', frame_length)
 
-        predicted_heatmap = estimator(pose_input)
-        pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
+            predicted_heatmap = estimator(pose_input)
+            pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
+            scores = scores.asnumpy()
+            confidence = confidence.asnumpy()
+            pred_coords = pred_coords.asnumpy()
 
-        scores = scores.asnumpy()
-        confidence = confidence.asnumpy()
-        pred_coords = pred_coords.asnumpy()
-
-        # Preparing for json
-        pose_data_curr = curr_pose(frame, pred_coords, confidence, scores, keypoint_thresh=0.2)
+            # Preparing for json
+            pose_data_curr = curr_pose(frame, pred_coords, confidence, scores, keypoint_thresh=0.2)
         pose_data_vid.append(pose_data_curr)
-        if(frame_count == 0):
-            dimensions = [frame.shape[1], frame.shape[0]]
 
-        print('Processing:', vid, ':', frame_count + 1, '/', frame_length)
+        if (frame_count == 0):
+            dimensions = [frame.shape[1], frame.shape[0]]
         frame_count += 1
     cap.release()
 
@@ -132,8 +138,7 @@ def videos_to_jsonPose(vidSide, vidFront, isNormal):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '../Test/'
-vidCoffee = path + 'coffee.mp4'
+path = '../Test2/'
 vidSide = path + 'Part01test-side.avi'
 vidFront = path + 'Part01test-front.avi'
 

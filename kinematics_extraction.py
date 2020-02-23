@@ -33,6 +33,9 @@ ptID = {
 #==================================================================================
 # Calculates joint angle of knee
 def calc_knee_angle(hip, knee, ankle, rightNeg):
+    if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
+        return None  # returns this value as error code for no keypoint detection
+
     # Identifying joint positions
     a = np.array(hip)
     b = np.array(knee)
@@ -53,6 +56,9 @@ def calc_knee_angle(hip, knee, ankle, rightNeg):
 
 # Calculates joint angle of hip
 def calc_hip_angle(hip, knee, rightNeg, isFlex):
+    if(hip == [-1,-1] or knee == [-1,-1]):
+        return None # returns this value as error code for no keypoint detection
+
     # Identifying joint positions
     a = np.array(hip) # Main joint
     b = np.array(knee)
@@ -71,12 +77,15 @@ def calc_hip_angle(hip, knee, rightNeg, isFlex):
     if(isFlex): angle = angle * 4/3 # A heuristic for catering for forward/backward pelvic tilt
     return angle.tolist()
 
+# TODO: Remove: noticing redundancy, smoothing deals with outliers
 # If angle to be fed in is an outlier, simply return the same angle value as before
 def outlier_check(angle_list, new_angle):
     if(len(angle_list) == 0): return new_angle
+    if(new_angle == None or angle_list[-1] == None): return new_angle
 
     angle_before = angle_list[-1]
-    if(new_angle > angle_before + 10 or new_angle < angle_before - 10):
+    diff = 30
+    if(new_angle > angle_before + diff or new_angle < angle_before - diff):
         return angle_before
     else:
         return new_angle

@@ -14,6 +14,7 @@ from scipy import signal
 import pandas as pd
 import numpy as np
 import json
+import math
 
 #==================================================================================
 #                                   Constants
@@ -56,9 +57,13 @@ def smooth1(angle_list, weight):  # Weight between 0 and 1
     last = angle_list[0]  # First value in the plot (first timestep)
     smoothed = []
     for angle in angle_list:
-        smoothed_val = last * weight + (1 - weight) * angle  # Calculate smoothed value
-        smoothed.append(smoothed_val) # Save it
-        last = smoothed_val # Anchor the last smoothed value
+        if(math.isnan(angle) or math.isnan(last)): # Caters for no person detecion
+            smoothed.append(None)
+            last = angle
+        else:
+            smoothed_val = last * weight + (1 - weight) * angle  # Calculate smoothed value
+            smoothed.append(smoothed_val)
+            last = smoothed_val # Anchor the last smoothed value
     return smoothed
 
 def smoothLR(angles_list, weight):
@@ -87,7 +92,7 @@ def getStepOnFrames(dataS, L_or_R, hist, avg_thresh):
         ankle_X = ankle_pos[0]
         ankle_Y = ankle_pos[1]
 
-        if (i > 0):
+        if (i > 0 and (ankle_pos != [-1,-1] or ankle_points[-1] != [-1,-1]) ):
             ankle_pos_prev = ankle_points[-1]
             ankle_X_prev = ankle_pos_prev[0]
             ankle_Y_prev = ankle_pos_prev[1]
@@ -102,7 +107,7 @@ def getStepOnFrames(dataS, L_or_R, hist, avg_thresh):
             isGrounded_recent = isGrounded_srs[-hist:]
             isGrounded_avg = sum(isGrounded_recent)/len(isGrounded_recent)
 
-            #print(i, abs_diff, isGrounded, isGrounded_avg)
+            # print(i, ankle_pos, abs_diff, isGrounded, isGrounded_avg)
 
             if(seekStepOn):
                 if(isGrounded_avg > avg_thresh):
@@ -111,7 +116,6 @@ def getStepOnFrames(dataS, L_or_R, hist, avg_thresh):
             else:
                 if(isGrounded_avg == 0):
                     seekStepOn = True
-
         ankle_points.append(pose[ptID['ankle_' + L_or_R]])
         isGrounded_srs.append(isGrounded)
     return stepOnFrames
@@ -273,7 +277,7 @@ dataF = jsonPose[0]['dataF']
 dimF = jsonPose[0]['dimF']
 lenS = jsonPose[0]['lenS']
 
-with open('test_angles3.json', 'r') as f:
+with open('test_angles.json', 'r') as f:
     jsonAngles = json.load(f)
 raw_angles = jsonAngles[0]
 
@@ -296,8 +300,8 @@ knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
 hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
 # Slicing into gait cycles
-stepOnFrames_L = getStepOnFrames(dataS, 'L',  6, 0.6)
-stepOnFrames_R = getStepOnFrames(dataS, 'R',  6, 0.6)
+stepOnFrames_L = getStepOnFrames(dataS, 'L',  8, 0.8)
+stepOnFrames_R = getStepOnFrames(dataS, 'R',  8, 0.8)
 knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
@@ -319,13 +323,17 @@ hip_AbdAdd4 = avg_gcLR(hip_AbdAdd3)
 #plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill
 #plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + Smoothing
 #plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
-#plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
 
-plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60)) # Orig
-plot_anglesLR(hip_FlexExt1, 'Hip Flexion/Extension', (-20, 60)) # Gap Fill
-plot_gcLR(hip_FlexExt3, 'Hip Flexion/Extension', (-20, 60)) # Gait cycle splitting + Smoothing
-plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=False) # Avg and std
+plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
 plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=True) # Avg and std
+plot_avg_gcLR(knee_AbdAdd4, 'Knee Abduction/Adduction', (-20, 20), plotSep=True) # Avg and std
+plot_avg_gcLR(hip_AbdAdd4, 'Hip Abduction/Adduction', (-30, 30), plotSep=True) # Avg and std
+
+#plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60)) # Orig
+#plot_anglesLR(hip_FlexExt1, 'Hip Flexion/Extension', (-20, 60)) # Gap Fill
+#plot_gcLR(hip_FlexExt3, 'Hip Flexion/Extension', (-20, 60)) # Gait cycle splitting + Smoothing
+#plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=False) # Avg and std
+#plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=True) # Avg and std
 
 # plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
 # plot_anglesLR(knee_AbdAdd1, 'Knee Abduction/Adduction', (-20, 20))

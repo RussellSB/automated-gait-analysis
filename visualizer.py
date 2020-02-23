@@ -87,13 +87,10 @@ def plot_angles(angleList, title, yrange):
 
     plt.show()
 
-# TODO: Method for json Angles, calls plotting functions
-# def jsonAngles_to_pics(jsonFile):
+#path = '../Test2/GIF/'
+#jsonPose_to_plots('test.json', path)
 
-# path = '../Test/GIF/'
-# jsonPose_to_plots('test.json', path)
-
-with open('test_angles.json', 'r') as f:
+with open('test_angles2.json', 'r') as f:
     jsonAngles = json.load(f)
 
 raw_angles = jsonAngles[0]
