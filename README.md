@@ -8,4 +8,6 @@ First step: Extract keypoints from synchronized video sequences using Pre-traine
 <p align="center">
   <img src="https://github.com/RussellSB/Automated-Gait-Analysis/blob/master/demo/example2.gif">
 </p>
-Second step: Exract feauture w.r.t kinematics. Make use of vectors as well as trigonometry for this. So far computed left/right knee flex/extension. TODO: hip, ankle, elbow (extra: hands) (unknown: shoulder? Is it even possible tbh)
+Second step: Extract raw angle kinematics
+
+Third step: Process kinematics.
