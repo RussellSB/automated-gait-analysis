@@ -75,7 +75,6 @@ def smoothLR(angles_list, weight):
 
     return smoothed_LR
 
-# TODO: Test that it works for other participants too
 # Returns list of frames where step on of a particular leg occurs
 def getStepOnFrames(dataS, L_or_R, hist, avg_thresh):
     ankle_points = []
@@ -139,6 +138,7 @@ def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
     gc = [gc_L, gc_R]
     return gc
 
+# TODO: Improve catering for None
 # Normalizes the xrange to a sample of N data points
 def resample_gcLR(gcLR, N):
     gcL = gcLR[0]
@@ -146,10 +146,17 @@ def resample_gcLR(gcLR, N):
     gcLR_resampled = [[], []]
 
     for angleList in gcL:
+
+        for i in range(0,len(angleList)):
+            if(angleList[i] == None):
+                angleList[i] = 0
         angleListL = signal.resample(angleList, N)
         gcLR_resampled[0].append(angleListL)
 
     for angleList in gcR:
+        for i in range(0,len(angleList)):
+            if(angleList[i] == None):
+                angleList[i] = 0
         angleListR = signal.resample(angleList, N)
         gcLR_resampled[1].append(angleListR)
 
@@ -183,7 +190,7 @@ def plot_angles(angleList, title, yrange, isRed):
     xmax = len(angleList)
     fig, ax = plt.subplots()
     ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
+    ax.set_xlabel('Data points')
     ax.set_ylabel(r"${\Theta}$ (degrees)")
     ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
     ax.plot(angleList, color=color)
@@ -268,7 +275,7 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
 #==================================================================================
 #                                   Main
 #==================================================================================
-with open('test.json', 'r') as f:
+with open('../Test2/test.json', 'r') as f:
     jsonPose = json.load(f)
 
 dataS = jsonPose[0]['dataS']
@@ -277,7 +284,7 @@ dataF = jsonPose[0]['dataF']
 dimF = jsonPose[0]['dimF']
 lenS = jsonPose[0]['lenS']
 
-with open('test_angles.json', 'r') as f:
+with open('../Test2/test_angles.json', 'r') as f:
     jsonAngles = json.load(f)
 raw_angles = jsonAngles[0]
 
@@ -300,8 +307,8 @@ knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
 hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
 # Slicing into gait cycles
-stepOnFrames_L = getStepOnFrames(dataS, 'L',  8, 0.8)
-stepOnFrames_R = getStepOnFrames(dataS, 'R',  8, 0.8)
+stepOnFrames_L = getStepOnFrames(dataS, 'L',  6, 0.6)
+stepOnFrames_R = getStepOnFrames(dataS, 'R',  6, 0.6)
 knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
 knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
@@ -319,15 +326,16 @@ hip_FlexExt4 = avg_gcLR(hip_FlexExt3)
 knee_AbdAdd4 = avg_gcLR(knee_AbdAdd3)
 hip_AbdAdd4 = avg_gcLR(hip_AbdAdd3)
 
-#plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80)) # Orig
-#plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill
-#plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + Smoothing
-#plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
-
+plot_anglesLR(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80)) # Orig
+plot_anglesLR(knee_FlexExt1, 'Knee Flexion/Extension', (-20, 80)) # Gap Fill + smoothing
+plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension', (-20, 80)) # Gait cycle splitting + resampling
+# plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=False) # Avg and std
 plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
-plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=True) # Avg and std
-plot_avg_gcLR(knee_AbdAdd4, 'Knee Abduction/Adduction', (-20, 20), plotSep=True) # Avg and std
-plot_avg_gcLR(hip_AbdAdd4, 'Hip Abduction/Adduction', (-30, 30), plotSep=True) # Avg and std
+
+#plot_avg_gcLR(knee_FlexExt4, 'Knee Flexion/Extension', (-20, 80), plotSep=True) # Avg and std
+#plot_avg_gcLR(hip_FlexExt4, 'Hip Flexion/Extension', (-20, 60), plotSep=True) # Avg and std
+#plot_avg_gcLR(knee_AbdAdd4, 'Knee Abduction/Adduction', (-20, 20), plotSep=True) # Avg and std
+#plot_avg_gcLR(hip_AbdAdd4, 'Hip Abduction/Adduction', (-30, 30), plotSep=True) # Avg and std
 
 #plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60)) # Orig
 #plot_anglesLR(hip_FlexExt1, 'Hip Flexion/Extension', (-20, 60)) # Gap Fill
