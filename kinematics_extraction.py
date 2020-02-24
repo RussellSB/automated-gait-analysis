@@ -136,7 +136,7 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
 # Checks which direction gait is from side view (affects how angles in saggital plane are calculated)
 def checkGaitDirectionS(dataS, dimS):
-    pose_init = dataS[0]
+    pose_init = dataS[0] # TODO: Not first frame but first frame where ankle is detected
     kneeL_init = pose_init[ptID['knee_L']]  # Using knee L as it is the most visible w.r.t gait
     init_x = kneeL_init[0]
     max_x = dimS[0]

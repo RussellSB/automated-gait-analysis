@@ -14,14 +14,13 @@
 #==================================================================================
 from __future__ import division
 from gluoncv.data.transforms.pose import detector_to_alpha_pose, heatmap_to_coord_alpha_pose
-from gluoncv.utils.viz import cv_plot_image, cv_plot_keypoints
 from gluoncv.model_zoo import get_model
-import matplotlib.pyplot as plt
 import gluoncv as gcv
-import numpy as np
 import mxnet as mx
 import time, cv2
 import json
+import glob
+import os
 
 #==================================================================================
 #                                   AI Detectors
@@ -107,7 +106,7 @@ def video_to_listPose(vid):
     return dimensions, pose_data_vid
 
 # Given two videos it will output the json describing all poses in both videos
-def videos_to_jsonPose(vidSide, vidFront, isNormal):
+def videos_to_jsonPose(vidSide, vidFront, partId, capId, isNormal):
     dimensions_side, pose_vid_side = video_to_listPose(vidSide)
     dimensions_front, pose_vid_front = video_to_listPose(vidFront)
 
@@ -117,10 +116,9 @@ def videos_to_jsonPose(vidSide, vidFront, isNormal):
     if (len(pose_vid_side) != len(pose_vid_front)):
         print('Warning: side video', len(pose_vid_side), 'and front video', len(pose_vid_front), 'of different frame counts')
 
-    # TODO: Decide whether save as list of dics (file per participant), or just one dic (file per capture)
-    jsonPose_list = []
     jsonPose_dict = {
-        'id': 'test',
+        'partId': partId,
+        'capId': capId,
         'normal': isNormal,
         'dimS': dimensions_side,
         'lenS' : len(pose_vid_side),
@@ -129,19 +127,29 @@ def videos_to_jsonPose(vidSide, vidFront, isNormal):
         'dataS' : pose_vid_side,
         'dataF' : pose_vid_front
     }
-    jsonPose_list.append(jsonPose_dict)
-
-    # TODO: Extract filename from vid name
-    with open('test' + '.json', 'w') as outfile:
-        json.dump(jsonPose_list, outfile, separators=(',', ':'))
+    return jsonPose_dict
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '../Test2/'
-vidSide = path + 'Part01test-side.avi'
-vidFront = path + 'Part01test-front.avi'
+path = '..\\Test3\\'
+jsonPose_list = []
 
 start_time = time.time()
-videos_to_jsonPose(vidSide, vidFront,True)
+i = 0
+fs_pair = []
+for filename in glob.glob(os.path.join(path, '*.avi')):
+    fs_pair.append(filename)
+    if(i % 2):
+        print('Processing capture pair: ', fs_pair)
+        partId = fs_pair[0].split('-')[0].split('\\')[2]
+        capId = fs_pair[0].split('-')[1]
+        isNormal = fs_pair[0].split('-')[2]
+        jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, True)
+        jsonPose_list.append(jsonPose_dict)
+        fs_pair.clear()
+    i += 1
 print('JSON pose file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
+
+with open('test3' + '.json', 'w') as outfile:
+    json.dump(jsonPose_list, outfile, separators=(',', ':'))

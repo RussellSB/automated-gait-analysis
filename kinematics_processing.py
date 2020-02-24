@@ -351,6 +351,3 @@ plot_avg_gcLR(hip_AbdAdd4, 'Hip Abduction/Adduction', (-30, 30), plotSep=True) #
 # plot_anglesLR(hip_FlexExt, 'Hip Flexion/Extension', (-20, 60))
 # plot_anglesLR(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20))
 # plot_anglesLR(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30))
-
-
-
