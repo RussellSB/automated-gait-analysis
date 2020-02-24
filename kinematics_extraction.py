@@ -171,7 +171,7 @@ def calc_angles_jsonPose(jsonFile):
     jsonList = [jsonDict]
 
     #TODO: Decide whether one dic or list of dics (with respect to pose estimation json)
-    with open('test_angles' + '.json', 'w') as outfile:
+    with open('../Test/test_angles' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
     return jsonList
@@ -180,7 +180,7 @@ def calc_angles_jsonPose(jsonFile):
 #                                   Main
 #==================================================================================
 
-jsonFile = 'test.json'
+jsonFile = '../Test/test.json'
 start_time = time.time()
 test = calc_angles_jsonPose(jsonFile)
 print('JSON raw kinematics file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
