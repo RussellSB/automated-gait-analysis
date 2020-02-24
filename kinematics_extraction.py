@@ -180,7 +180,7 @@ def calc_angles_jsonPose(jsonFile):
         }
         jsonList.append(jsonDict)
 
-    with open('test3_angles' + '.json', 'w') as outfile:
+    with open('test3' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
 #==================================================================================
