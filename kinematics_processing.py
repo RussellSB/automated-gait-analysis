@@ -275,7 +275,7 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
 #==================================================================================
 #                                   Main
 #==================================================================================
-with open('../Test/test.json', 'r') as f:
+with open('test3.json', 'r') as f:
     jsonPose = json.load(f)
 
 dataS = jsonPose[0]['dataS']
@@ -284,7 +284,7 @@ dataF = jsonPose[0]['dataF']
 dimF = jsonPose[0]['dimF']
 lenS = jsonPose[0]['lenS']
 
-with open('../Test/test_angles.json', 'r') as f:
+with open('test3_angles.json', 'r') as f:
     jsonAngles = json.load(f)
 raw_angles = jsonAngles[0]
 

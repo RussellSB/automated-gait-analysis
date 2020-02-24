@@ -142,10 +142,11 @@ for filename in glob.glob(os.path.join(path, '*.avi')):
     fs_pair.append(filename)
     if(i % 2):
         print('Processing capture pair: ', fs_pair)
-        partId = fs_pair[0].split('-')[0].split('\\')[2]
         capId = fs_pair[0].split('-')[1]
-        isNormal = fs_pair[0].split('-')[2]
-        jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, True)
+        isNormalTag = fs_pair[0].split('-')[2]
+        partId = fs_pair[0].split('-')[0].split('\\')[2]
+        isNormal = True if isNormalTag == 'N' else False
+        jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, isNormal)
         jsonPose_list.append(jsonPose_dict)
         fs_pair.clear()
     i += 1

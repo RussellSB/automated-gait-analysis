@@ -136,9 +136,18 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
 # Checks which direction gait is from side view (affects how angles in saggital plane are calculated)
 def checkGaitDirectionS(dataS, dimS):
-    pose_init = dataS[0] # TODO: Not first frame but first frame where ankle is detected
-    kneeL_init = pose_init[ptID['knee_L']]  # Using knee L as it is the most visible w.r.t gait
-    init_x = kneeL_init[0]
+    # Finds first instance of ankle in video
+    for pose in dataS:
+        ankle_L = pose[ptID['ankle_L']]
+        ankle_R = pose[ptID['ankle_R']]
+        if(ankle_L != [-1,-1]):
+            ankle_init = ankle_L
+            break
+        if (ankle_R != [-1, -1]):
+            ankle_init = ankle_R
+            break
+
+    init_x = ankle_init[0]
     max_x = dimS[0]
     if (init_x > max_x / 2):
         return True
@@ -150,37 +159,35 @@ def calc_angles_jsonPose(jsonFile):
     with open(jsonFile, 'r') as f:
         jsonPose = json.load(f)
 
-    dataS = jsonPose[0]['dataS']
-    dimS = jsonPose[0]['dimS']
-    dataF = jsonPose[0]['dataF']
-    dimF = jsonPose[0]['dimF']
-    lenS = jsonPose[0]['lenS']
-    lenF = jsonPose[0]['lenF']
+    jsonList = []
+    for cap in jsonPose:
+        dataS = cap['dataS']
+        dimS = cap['dimS']
+        dataF = cap['dataF']
+        lenS = cap['lenS']
+        lenF = cap['lenF']
 
-    limit = max(lenF, lenS) # Can set to min if the same is desired
-    rightNeg = checkGaitDirectionS(dataS, dimS)
+        limit = max(lenF, lenS) # Can set to min if the same is desired
+        rightNeg = checkGaitDirectionS(dataS, dimS) # True: left to right, False: right to left
 
-    knee_FlexExt, hip_FlexExt = raw_angles(dataS, rightNeg, limit, isFlex=True)
-    knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, limit=limit, invert=True)
-    jsonDict = {
-        'knee_FlexExt' : knee_FlexExt,
-        'hip_FlexExt' : hip_FlexExt,
-        'knee_AbdAdd' : knee_AbdAdd,
-        'hip_AbdAdd' : hip_AbdAdd
-    }
-    jsonList = [jsonDict]
+        knee_FlexExt, hip_FlexExt = raw_angles(dataS, rightNeg, limit, isFlex=True)
+        knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, limit=limit, invert=True)
+        jsonDict = {
+            'knee_FlexExt' : knee_FlexExt,
+            'hip_FlexExt' : hip_FlexExt,
+            'knee_AbdAdd' : knee_AbdAdd,
+            'hip_AbdAdd' : hip_AbdAdd
+        }
+        jsonList.append(jsonDict)
 
-    #TODO: Decide whether one dic or list of dics (with respect to pose estimation json)
-    with open('../Test/test_angles' + '.json', 'w') as outfile:
+    with open('test3_angles' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
-
-    return jsonList
 
 #==================================================================================
 #                                   Main
 #==================================================================================
 
-jsonFile = '../Test/test.json'
+jsonFile = 'test3.json'
 start_time = time.time()
-test = calc_angles_jsonPose(jsonFile)
+calc_angles_jsonPose(jsonFile)
 print('JSON raw kinematics file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
