@@ -184,95 +184,6 @@ def avg_gcLR(gcLR):
     }
     return avg_gcLR
 
-# Plots kinematics of left or right leg
-def plot_angles(angleList, title, yrange, isRed):
-    if(isRed): color = red
-    else: color = blue
-    xmax = len(angleList)
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Data points')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-    ax.plot(angleList, color=color)
-    plt.show()
-
-# Plots left and right kinematics
-def plot_anglesLR(angleList, title, yrange):
-    leftMax = len(angleList[0])
-    rightMax = len(angleList[1])
-    xmax = max(leftMax, rightMax)
-
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-
-    leftAngles = angleList[0]
-    rightAngles = angleList[1]
-
-    ax.plot(leftAngles, color=red)
-    ax.plot(rightAngles, color=blue)
-
-    plt.show()
-
-# Plots each angle list gait cycle in list
-def plot_gc(gc, title, yrange, isRed):
-    for angleList in gc:
-        plot_angles(angleList, title, yrange, isRed)
-
-# Plots left and right gait cycles
-def plot_gcLR(gcLR, title, yrange):
-    plot_gc(gcLR[0], title, yrange, True)
-    plot_gc(gcLR[1], title, yrange, False)
-
-# Plots average as well as standard deviation
-def plot_avg(avg, std, title, yrange, N, isRed):
-    if (isRed):
-        color = red
-    else:
-        color = blue
-
-    xmax = len(avg)
-    fig, ax = plt.subplots()
-    ax.set_title(title + ' (' + str(N) + ' Gait Cycles)')
-    ax.set_xlabel('Data points')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-    ax.plot(avg, color=color)
-
-    std1_gcL = (np.array(avg) + np.array(std)).tolist()
-    std2_gcL = (np.array(avg) - np.array(std)).tolist()
-    ax.plot(std1_gcL, '--', color=color)
-    ax.plot(std2_gcL, '--', color=color)
-
-# Plots left and right average as well as standard deviation
-def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
-    avg_gcL = avg_LR['gcL_avg']
-    avg_gcR = avg_LR['gcR_avg']
-    std_gcL = avg_LR['gcL_std']
-    std_gcR = avg_LR['gcR_std']
-    N_L = avg_LR['gcL_count']
-    N_R = avg_LR['gcR_count']
-
-    if(not plotSep):
-        leftMax = len(avg_gcL) - 1
-        rightMax = len(avg_gcR) - 1
-        xmax = max(leftMax, rightMax)
-        fig, ax = plt.subplots()
-        ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
-        ax.set_xlabel('Data points')
-        ax.set_ylabel(r"${\Theta}$ (degrees)")
-        ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-        ax.plot(avg_gcL, color=red)
-        ax.plot(avg_gcR, color=blue)
-        plt.show()
-    else:
-        plot_avg(avg_gcL, std_gcL, title, yrange, N_L, isRed=True)
-        plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
-        plt.show()
-
 def kinematics_process(poseFile, anglesFile, writeFile):
     with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
@@ -366,17 +277,6 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 
     with open(writeFile, 'w') as outfile:
         json.dump(jsonDict, outfile, separators=(',', ':'))
-
-    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
-    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
-
-    # plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-    # plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
-
-    # plot_gcLR(knee_AbdAdd_gc, 'Knee Abduction/Adduction', (-20, 20))
-    # plot_gcLR(hip_AbdAdd_gc, 'Hip Abduction/Adduction', (-30, 30))
 
 #==================================================================================
 #                                   Main

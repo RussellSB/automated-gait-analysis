@@ -40,7 +40,7 @@ blue = "#72B6E9"
 #                                   Methods
 #==================================================================================
 # PLots and saves every pose frame of the video
-def plot_poses(data, dim, path, limit):
+def plot_poses(data, dim, outpath, limit):
     i = 1
     for pose in data:
         fig, ax = plt.subplots()
@@ -54,14 +54,14 @@ def plot_poses(data, dim, path, limit):
                 y = [joint1[1], joint2[1]]
                 ax.plot(x, y, linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
                 ax.scatter(x, y, s=20)
-        filename = path + str(i) + '.png'
+        filename = outpath + str(i) + '.png'
         plt.savefig(filename)
         if(i == limit): break
         i += 1
 
 # Makes a collection of figures out of what is described in the jsonFile
-def jsonPose_to_plots(jsonFile, path):
-    with open(jsonFile, 'r') as f:
+def jsonPose_to_plots(poseFile, outpath):
+    with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
 
     lenF = jsonPose[0]['lenF']
@@ -70,16 +70,16 @@ def jsonPose_to_plots(jsonFile, path):
 
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    path1 = path + jsonPose[0]['id'] + '-S/'
+    path1 = outpath + jsonPose[0]['id'] + '-S/'
     plot_poses(dataS, dimS, path1, limit)
 
     dataF = jsonPose[0]['dataF']
     dimF = jsonPose[0]['dimF']
-    path2 = path + jsonPose[0]['id'] + '-F/'
+    path2 = outpath + jsonPose[0]['id'] + '-F/'
     plot_poses(dataF, dimF, path2, limit)
 
 # PLots and saves every leg pose frame of the video
-def plot_legs(data, dim, path):
+def plot_legs(data, dim, outpath):
     i = 1
     for pose in data:
         fig, ax = plt.subplots()
@@ -119,47 +119,27 @@ def plot_legs(data, dim, path):
         ax.scatter(x, y, s=20, color=blue)
         ax.plot(x, y, color=blue)
 
-        filename = path + str(i) + '.svg'
+        filename = outpath + str(i) + '.svg'
         plt.savefig(filename)
         i += 1
 
-# Makes a collection of figures out of what is described in the jsonFile
-def jsonLegs_to_plots(jsonFile, path):
-    with open(jsonFile, 'r') as f:
+# Saves leg plots of front and forward videos
+def jsonLegs_to_plots(poseFile, outpath):
+    with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
 
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    path1 = path + 'legs' + '-S/'
+    path1 = outpath + 'legs' + '-S/'
     plot_legs(dataS, dimS, path1)
 
     dataF = jsonPose[0]['dataF']
     dimF = jsonPose[0]['dimF']
-    path2 = path + 'legs' + '-F/'
+    path2 = outpath + 'legs' + '-F/'
     plot_legs(dataF, dimF, path2)
 
-# Plots left and right kinematics
-def plot_angles(angleList, title, yrange):
-    leftMax = len(angleList[0])
-    rightMax = len(angleList[1])
-    xmax = max(leftMax, rightMax)
-
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-
-    leftAngles = angleList[0]
-    rightAngles = angleList[1]
-
-    ax.plot(leftAngles, color=red)
-    ax.plot(rightAngles, color=blue)
-
-    plt.show()
-
-# Plots left and right kinematics frame by frame and saves
-def plot_angles2(angleList, title, yrange, path):
+# Saves left and right kinematics frame by frame
+def save_angles(angleList, title, yrange, outpath):
     leftMax = len(angleList[0])
     rightMax = len(angleList[1])
     xmax = max(leftMax, rightMax)
@@ -179,24 +159,131 @@ def plot_angles2(angleList, title, yrange, path):
 
         ax.plot(leftTemp, color=red)
         ax.plot(rightTemp, color=blue)
-        filename = path + str(i) + '.svg'
+        filename = outpath + str(i) + '.svg'
         plt.savefig(filename)
 
-path = '../Test2/GIF/'
-jsonLegs_to_plots('../Test2/test.json', path)
+# Saves raw angles for animations
+def plot_kinematics_extract(anglesFile, outpath):
+    with open(anglesFile, 'r') as f:
+       jsonAngles = json.load(f)
 
-#with open('../Test2/test_angles.json', 'r') as f:
-#    jsonAngles = json.load(f)
+    raw_angles = jsonAngles[0]
+    knee_FlexExt = raw_angles['knee_FlexExt']
+    hip_FlextExt = raw_angles['hip_FlexExt']
+    knee_AbdAdd = raw_angles['knee_AbdAdd']
+    hip_AbdAdd = raw_angles['hip_AbdAdd']
 
-#raw_angles = jsonAngles[0]
-#knee_FlexExt = raw_angles['knee_FlexExt']
-#hip_FlextExt = raw_angles['hip_FlexExt']
-#knee_AbdAdd = raw_angles['knee_AbdAdd']
-#hip_AbdAdd = raw_angles['hip_AbdAdd']
+    save_angles(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80), outpath + 'knee_FlexExt/')
+    save_angles(hip_FlextExt, 'Hip Flexion/Extension', (-20, 60), outpath + 'hip_FlexExt/')
+    save_angles(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20), outpath + 'knee_AbdAdd/')
+    save_angles(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30), outpath + 'hip_AbdAdd/')
 
-#path = '../Test2/GIF/'
-#plot_angles2(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80), path + 'knee_FlexExt/')
-#plot_angles2(hip_FlextExt, 'Hip Flexion/Extension', (-20, 60), path + 'hip_FlexExt/')
-#plot_angles2(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20), path + 'knee_AbdAdd/')
-#plot_angles2(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30), path + 'hip_AbdAdd/')
+# Plots kinematics of left or right leg
+def plot_angles(angleList, title, yrange, isRed):
+    if(isRed): color = red
+    else: color = blue
+    xmax = len(angleList)
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Data points')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(angleList, color=color)
+    plt.show()
 
+# Plots left and right kinematics
+def plot_anglesLR(angleList, title, yrange):
+    leftMax = len(angleList[0])
+    rightMax = len(angleList[1])
+    xmax = max(leftMax, rightMax)
+
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Frame (count)')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+
+    leftAngles = angleList[0]
+    rightAngles = angleList[1]
+
+    ax.plot(leftAngles, color=red)
+    ax.plot(rightAngles, color=blue)
+
+    plt.show()
+
+# Plots each angle list gait cycle in list
+def plot_gc(gc, title, yrange, isRed):
+    for angleList in gc:
+        plot_angles(angleList, title, yrange, isRed)
+
+# Plots left and right gait cycles
+def plot_gcLR(gcLR, title, yrange):
+    plot_gc(gcLR[0], title, yrange, True)
+    plot_gc(gcLR[1], title, yrange, False)
+
+# Plots average as well as standard deviation
+def plot_avg(avg, std, title, yrange, N, isRed):
+    if (isRed):
+        color = red
+    else:
+        color = blue
+
+    xmax = len(avg)
+    fig, ax = plt.subplots()
+    ax.set_title(title + ' (' + str(N) + ' Gait Cycles)')
+    ax.set_xlabel('Data points')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(avg, color=color)
+
+    std1_gcL = (np.array(avg) + np.array(std)).tolist()
+    std2_gcL = (np.array(avg) - np.array(std)).tolist()
+    ax.plot(std1_gcL, '--', color=color)
+    ax.plot(std2_gcL, '--', color=color)
+
+# Plots left and right average as well as standard deviation
+def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
+    avg_gcL = avg_LR['gcL_avg']
+    avg_gcR = avg_LR['gcR_avg']
+    std_gcL = avg_LR['gcL_std']
+    std_gcR = avg_LR['gcR_std']
+    N_L = avg_LR['gcL_count']
+    N_R = avg_LR['gcR_count']
+
+    if(not plotSep):
+        leftMax = len(avg_gcL) - 1
+        rightMax = len(avg_gcR) - 1
+        xmax = max(leftMax, rightMax)
+        fig, ax = plt.subplots()
+        ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
+        ax.set_xlabel('Data points')
+        ax.set_ylabel(r"${\Theta}$ (degrees)")
+        ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+        ax.plot(avg_gcL, color=red)
+        ax.plot(avg_gcR, color=blue)
+        plt.show()
+    else:
+        plot_avg(avg_gcL, std_gcL, title, yrange, N_L, isRed=True)
+        plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
+        plt.show()
+
+#==================================================================================
+#                                   Main
+#==================================================================================
+path = '..\\Test3\\'
+poseFile = path + 'test3.json'
+anglesFile = path + 'test3_angles.json'
+gcFile = path + 'test3_gc.json'
+
+with open(gcFile, 'r') as f:
+    gc = json.load(f)
+
+knee_FlexExt_avg = gc['knee_FlexExt_avg']
+hip_FlexExt_avg = gc['hip_FlexExt_avg']
+knee_AbdAdd_avg = gc['knee_AbdAdd_avg']
+hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
+
+plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
+plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
+plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
