@@ -187,9 +187,9 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-
-readFile = 'test3.json'
-writeFile = 'test3_angles.json'
+path = '..\\Test3\\'
+readFile = path + 'test3.json'
+writeFile = path + 'test3_angles.json'
 start_time = time.time()
 kinematics_extract(readFile, writeFile)
 print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')

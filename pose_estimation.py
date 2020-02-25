@@ -15,6 +15,7 @@
 from __future__ import division
 from gluoncv.data.transforms.pose import detector_to_alpha_pose, heatmap_to_coord_alpha_pose
 from gluoncv.model_zoo import get_model
+from tqdm import tqdm
 import gluoncv as gcv
 import mxnet as mx
 import time, cv2
@@ -66,6 +67,9 @@ def video_to_listPose(vid):
     dimensions = (0, 0)
     frame_length = (int)(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    pbar = tqdm(total=frame_length, ncols=1, desc='.')
+    pbar.ncols = 100
+
     # Iterate through every frame in video
     while(cap.isOpened()):
         ret, frame = cap.read() # read current frame
@@ -82,11 +86,10 @@ def video_to_listPose(vid):
                                                           output_shape=(320, 256))
         # Gets current pose keypoints
         if (upscale_bbox is None): # Caters for no person detection
-            print('No person:', vid, ':', frame_count + 1, '/', frame_length)
-            pose_data_curr = [[-1, -1] for i in range(0, 17)]
+            pbar.set_description_str('Skipping  ')
+            pose_data_curr = [[-1, -1] for j in range(0, 17)]
         else: # Caters for person detection
-            print('Processing:', vid, ':', frame_count + 1, '/', frame_length)
-
+            pbar.set_description_str('Processing')
             predicted_heatmap = estimator(pose_input)
             pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
             scores = scores.asnumpy()
@@ -100,7 +103,9 @@ def video_to_listPose(vid):
         if (frame_count == 0):
             dimensions = [frame.shape[1], frame.shape[0]]
         frame_count += 1
+        pbar.update(1)
     cap.release()
+    pbar.close()
 
     return dimensions, pose_data_vid
 
@@ -135,7 +140,7 @@ def estimate_poses(path, writeFile):
     for filename in glob.glob(os.path.join(path, '*.avi')):
         fs_pair.append(filename)
         if (i % 2):
-            print('Processing capture pair: ', fs_pair)
+            print('Capture pair', '('+ str(int((i+1)/2)) +'/6)', ':', '\"'+fs_pair[1]+'\"', ',', '\"'+fs_pair[0]+'\"')
             capId = fs_pair[0].split('-')[1]
             isNormalTag = fs_pair[0].split('-')[2]
             isNormal = True if isNormalTag == 'N' else False
@@ -152,7 +157,7 @@ def estimate_poses(path, writeFile):
 #                                   Main
 #==================================================================================
 path = '..\\Test3\\'
-writeFile = 'test3.json'
+writeFile = path + 'test3.json'
 start_time = time.time()
 estimate_poses(path, writeFile)
 print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
