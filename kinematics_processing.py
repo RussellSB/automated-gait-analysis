@@ -256,8 +256,8 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
     N_R = avg_LR['gcR_count']
 
     if(not plotSep):
-        leftMax = len(avg_gcL)
-        rightMax = len(avg_gcR)
+        leftMax = len(avg_gcL) - 1
+        rightMax = len(avg_gcR) - 1
         xmax = max(leftMax, rightMax)
         fig, ax = plt.subplots()
         ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
@@ -371,3 +371,10 @@ plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=Fal
 plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
 plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
 plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+
+#plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+#plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+
+#plot_gcLR(knee_AbdAdd_gc, 'Knee Abduction/Adduction', (-20, 20))
+#plot_gcLR(hip_AbdAdd_gc, 'Hip Abduction/Adduction', (-30, 30))
+

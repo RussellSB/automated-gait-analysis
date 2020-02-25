@@ -122,7 +122,8 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
         angle = outlier_check(knee_ang_R, angle)
         knee_ang_R.append(angle)
 
-        angle = calc_hip_angle(hip_R, knee_R, rightNeg, isFlex)
+        if(invert): angle = calc_hip_angle(hip_R, knee_R, not rightNeg, isFlex)
+        else: angle = calc_hip_angle(hip_R, knee_R, rightNeg, isFlex)
         angle = outlier_check(hip_ang_R, angle)
         hip_ang_R.append(angle)
 
@@ -168,10 +169,10 @@ def calc_angles_jsonPose(jsonFile):
         lenF = cap['lenF']
 
         limit = max(lenF, lenS) # Can set to min if the same is desired
-        rightNeg = checkGaitDirectionS(dataS, dimS) # True: left to right, False: right to left
+        rightNeg = checkGaitDirectionS(dataS, dimS) # True: Right to Left, False: Left to Right
 
         knee_FlexExt, hip_FlexExt = raw_angles(dataS, rightNeg, limit, isFlex=True)
-        knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, limit=limit, invert=True)
+        knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, rightNeg, limit=limit, invert=True)
         jsonDict = {
             'knee_FlexExt' : knee_FlexExt,
             'hip_FlexExt' : hip_FlexExt,
@@ -180,7 +181,7 @@ def calc_angles_jsonPose(jsonFile):
         }
         jsonList.append(jsonDict)
 
-    with open('test3' + '.json', 'w') as outfile:
+    with open('test3_angles' + '.json', 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
 #==================================================================================
