@@ -267,6 +267,20 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
         plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
         plt.show()
 
+def plot_avg_gcLR_all(gcFile):
+    with open(gcFile, 'r') as f:
+        gc = json.load(f)
+
+    knee_FlexExt_avg = gc['knee_FlexExt_avg']
+    hip_FlexExt_avg = gc['hip_FlexExt_avg']
+    knee_AbdAdd_avg = gc['knee_AbdAdd_avg']
+    hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
+
+    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
+    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
+    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+
 #==================================================================================
 #                                   Main
 #==================================================================================
@@ -274,16 +288,4 @@ path = '..\\Test3\\'
 poseFile = path + 'test3.json'
 anglesFile = path + 'test3_angles.json'
 gcFile = path + 'test3_gc.json'
-
-with open(gcFile, 'r') as f:
-    gc = json.load(f)
-
-knee_FlexExt_avg = gc['knee_FlexExt_avg']
-hip_FlexExt_avg = gc['hip_FlexExt_avg']
-knee_AbdAdd_avg = gc['knee_AbdAdd_avg']
-hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
-
-plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
-plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+plot_avg_gcLR_all(gcFile)

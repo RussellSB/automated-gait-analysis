@@ -92,6 +92,7 @@ def video_to_listPose(vid):
             pbar.set_description_str('Processing')
             predicted_heatmap = estimator(pose_input)
             pred_coords, confidence = heatmap_to_coord_alpha_pose(predicted_heatmap, upscale_bbox)
+
             scores = scores.asnumpy()
             confidence = confidence.asnumpy()
             pred_coords = pred_coords.asnumpy()
@@ -156,8 +157,8 @@ def estimate_poses(path, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Test3\\'
-writeFile = path + 'test3.json'
+path = '..\\Test4\\'
+writeFile = path + 'test4.json'
 start_time = time.time()
 estimate_poses(path, writeFile)
 print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
