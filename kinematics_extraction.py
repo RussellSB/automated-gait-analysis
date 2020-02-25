@@ -156,8 +156,8 @@ def checkGaitDirectionS(dataS, dimS):
         return False
 
 # Computes and saves kinematics (joint angles) from poses
-def calc_angles_jsonPose(jsonFile):
-    with open(jsonFile, 'r') as f:
+def kinematics_extract(readFile, writeFile):
+    with open(readFile, 'r') as f:
         jsonPose = json.load(f)
 
     jsonList = []
@@ -181,14 +181,15 @@ def calc_angles_jsonPose(jsonFile):
         }
         jsonList.append(jsonDict)
 
-    with open('test3_angles' + '.json', 'w') as outfile:
+    with open(writeFile, 'w') as outfile:
         json.dump(jsonList, outfile, separators=(',', ':'))
 
 #==================================================================================
 #                                   Main
 #==================================================================================
 
-jsonFile = 'test3.json'
+readFile = 'test3.json'
+writeFile = 'test3_angles.json'
 start_time = time.time()
-calc_angles_jsonPose(jsonFile)
-print('JSON raw kinematics file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
+kinematics_extract(readFile, writeFile)
+print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')

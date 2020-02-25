@@ -76,7 +76,6 @@ def video_to_listPose(vid):
         # Object detection
         x, frame = gcv.data.transforms.presets.yolo.transform_test(frame)  # short=512, max_size=350
         class_IDs, scores, bounding_boxs = detector(x.as_in_context(ctx))
-        # Stores xyxy of the bounding box of the first frame
 
         # Pose estimation
         pose_input, upscale_bbox = detector_to_alpha_pose(frame, class_IDs, scores, bounding_boxs,
@@ -129,28 +128,32 @@ def videos_to_jsonPose(vidSide, vidFront, partId, capId, isNormal):
     }
     return jsonPose_dict
 
+def estimate_poses(path, writeFile):
+    jsonPose_list = []
+    fs_pair = []
+    i = 0
+    for filename in glob.glob(os.path.join(path, '*.avi')):
+        fs_pair.append(filename)
+        if (i % 2):
+            print('Processing capture pair: ', fs_pair)
+            capId = fs_pair[0].split('-')[1]
+            isNormalTag = fs_pair[0].split('-')[2]
+            isNormal = True if isNormalTag == 'N' else False
+            partId = fs_pair[0].split('-')[0].split('\\')[2]
+            jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, isNormal)
+            jsonPose_list.append(jsonPose_dict)
+            fs_pair.clear()
+        i += 1
+
+    with open(writeFile, 'w') as outfile:
+        json.dump(jsonPose_list, outfile, separators=(',', ':'))
+
 #==================================================================================
 #                                   Main
 #==================================================================================
 path = '..\\Test3\\'
-jsonPose_list = []
-
+writeFile = 'test3.json'
 start_time = time.time()
-i = 0
-fs_pair = []
-for filename in glob.glob(os.path.join(path, '*.avi')):
-    fs_pair.append(filename)
-    if(i % 2):
-        print('Processing capture pair: ', fs_pair)
-        capId = fs_pair[0].split('-')[1]
-        isNormalTag = fs_pair[0].split('-')[2]
-        partId = fs_pair[0].split('-')[0].split('\\')[2]
-        isNormal = True if isNormalTag == 'N' else False
-        jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, isNormal)
-        jsonPose_list.append(jsonPose_dict)
-        fs_pair.clear()
-    i += 1
-print('JSON pose file generated:', '{0:.2f}'.format(time.time() - start_time), 's')
+estimate_poses(path, writeFile)
+print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
 
-with open('test3' + '.json', 'w') as outfile:
-    json.dump(jsonPose_list, outfile, separators=(',', ':'))

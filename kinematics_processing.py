@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import json
 import math
+import time
 
 #==================================================================================
 #                                   Constants
@@ -272,109 +273,117 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
         plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
         plt.show()
 
+def kinematics_process(poseFile, anglesFile, writeFile):
+    with open(poseFile, 'r') as f:
+        jsonPose = json.load(f)
+    with open(anglesFile, 'r') as f:
+        jsonAngles = json.load(f)
+
+    len1 = len(jsonPose)
+    len2 = len(jsonAngles)
+    if (len1 != len2):
+        print('Error: jsonPose of len', len1, 'does not match jsonAngles of len', len2)
+        exit()
+
+    knee_FlexExt_gc = [[], []]
+    hip_FlexExt_gc = [[], []]
+    knee_AbdAdd_gc = [[], []]
+    hip_AbdAdd_gc = [[], []]
+
+    for i in range(0, len1):
+        pose_srs = jsonPose[i]
+
+        dataS = pose_srs['dataS']
+        dimS = pose_srs['dimS']
+        dataF = pose_srs['dataF']
+        dimF = pose_srs['dimF']
+        lenS = pose_srs['lenS']
+
+        raw_angles = jsonAngles[i]
+
+        knee_FlexExt = raw_angles['knee_FlexExt']
+        hip_FlexExt = raw_angles['hip_FlexExt']
+        knee_AbdAdd = raw_angles['knee_AbdAdd']
+        hip_AbdAdd = raw_angles['hip_AbdAdd']
+
+        # Gap filling
+        knee_FlexExt0 = gapfillLR(knee_FlexExt)
+        hip_FlexExt0 = gapfillLR(hip_FlexExt)
+        knee_AbdAdd0 = gapfillLR(knee_AbdAdd)
+        hip_AbdAdd0 = gapfillLR(hip_AbdAdd)
+
+        # Smoothing
+        weight = 0.8
+        knee_FlexExt1 = smoothLR(knee_FlexExt0, weight)
+        hip_FlexExt1 = smoothLR(hip_FlexExt0, weight)
+        knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
+        hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
+
+        # Slicing into gait cycles
+        stepOnFrames_L = getStepOnFrames(dataS, 'L', 8, 0.8)
+        stepOnFrames_R = getStepOnFrames(dataS, 'R', 8, 0.8)
+        knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
+        hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
+        knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
+        hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
+
+        # Resampling to 100 (100 and 0 inclusive)
+        knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
+        hip_FlexExt3 = resample_gcLR(hip_FlexExt2, 101)
+        knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 101)
+        hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 101)
+
+        # Adding to global gait cycle instances list
+        for gc in knee_FlexExt3[0]: knee_FlexExt_gc[0].append(gc)
+        for gc in knee_FlexExt3[1]: knee_FlexExt_gc[1].append(gc)
+
+        for gc in hip_FlexExt3[0]: hip_FlexExt_gc[0].append(gc)
+        for gc in hip_FlexExt3[1]: hip_FlexExt_gc[1].append(gc)
+
+        for gc in knee_AbdAdd3[0]: knee_AbdAdd_gc[0].append(gc)
+        for gc in knee_AbdAdd3[1]: knee_AbdAdd_gc[1].append(gc)
+
+        for gc in hip_AbdAdd3[0]: hip_AbdAdd_gc[0].append(gc)
+        for gc in hip_AbdAdd3[1]: hip_AbdAdd_gc[1].append(gc)
+
+    # Averaging
+    knee_FlexExt_avg = avg_gcLR(knee_FlexExt_gc)
+    hip_FlexExt_avg = avg_gcLR(hip_FlexExt_gc)
+    knee_AbdAdd_avg = avg_gcLR(knee_AbdAdd_gc)
+    hip_AbdAdd_avg = avg_gcLR(hip_AbdAdd_gc)
+
+    jsonDict = {
+        'knee_FlexExt_avg': knee_FlexExt_avg,
+        'hip_FlexExt_avg': hip_FlexExt_avg,
+        'knee_AbdAdd_avg': knee_AbdAdd_avg,
+        'hip_AbdAdd_avg': hip_AbdAdd_avg,
+
+        'knee_FlexExt_gc': knee_FlexExt_gc,
+        'hip_FlexExt_gc': hip_FlexExt_gc,
+        'knee_AbdAdd_gc': knee_AbdAdd_gc,
+        'hip_AbdAdd_gc': hip_AbdAdd_gc,
+    }
+
+    with open(writeFile, 'w') as outfile:
+        json.dump(jsonDict, outfile, separators=(',', ':'))
+
+    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
+    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
+    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+
+    # plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+    # plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+
+    # plot_gcLR(knee_AbdAdd_gc, 'Knee Abduction/Adduction', (-20, 20))
+    # plot_gcLR(hip_AbdAdd_gc, 'Hip Abduction/Adduction', (-30, 30))
+
 #==================================================================================
 #                                   Main
 #==================================================================================
-with open('test3.json', 'r') as f:
-    jsonPose = json.load(f)
-with open('test3_angles.json', 'r') as f:
-    jsonAngles = json.load(f)
-
-
-len1 = len(jsonPose)
-len2 = len(jsonAngles)
-if(len1 != len2):
-    print('Error: jsonPose of len', len1, 'does not match jsonAngles of len', len2)
-    exit()
-
-knee_FlexExt_gc = [[], []]
-hip_FlexExt_gc = [[], []]
-knee_AbdAdd_gc = [[], []]
-hip_AbdAdd_gc = [[], []]
-
-for i in range(0, len1):
-    dataS = jsonPose[i]['dataS']
-    dimS = jsonPose[i]['dimS']
-    dataF = jsonPose[i]['dataF']
-    dimF = jsonPose[i]['dimF']
-    lenS = jsonPose[i]['lenS']
-
-    raw_angles = jsonAngles[i]
-
-    knee_FlexExt = raw_angles['knee_FlexExt']
-    hip_FlexExt = raw_angles['hip_FlexExt']
-    knee_AbdAdd = raw_angles['knee_AbdAdd']
-    hip_AbdAdd = raw_angles['hip_AbdAdd']
-
-    # Gap filling
-    knee_FlexExt0 = gapfillLR(knee_FlexExt)
-    hip_FlexExt0 = gapfillLR(hip_FlexExt)
-    knee_AbdAdd0 = gapfillLR(knee_AbdAdd)
-    hip_AbdAdd0 = gapfillLR(hip_AbdAdd)
-
-    # Smoothing
-    weight = 0.8
-    knee_FlexExt1 = smoothLR(knee_FlexExt0, weight)
-    hip_FlexExt1 = smoothLR(hip_FlexExt0, weight)
-    knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
-    hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
-
-    # Slicing into gait cycles
-    stepOnFrames_L = getStepOnFrames(dataS, 'L',  8, 0.8)
-    stepOnFrames_R = getStepOnFrames(dataS, 'R',  8, 0.8)
-    knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
-    hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
-    knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
-    hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
-
-    # Resampling to 100 (100 and 0 inclusive)
-    knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
-    hip_FlexExt3 = resample_gcLR(hip_FlexExt2, 101)
-    knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 101)
-    hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 101)
-
-    # Adding to global gait cycle instances list
-    for gc in knee_FlexExt3[0]: knee_FlexExt_gc[0].append(gc)
-    for gc in knee_FlexExt3[1]: knee_FlexExt_gc[1].append(gc)
-
-    for gc in hip_FlexExt3[0]: hip_FlexExt_gc[0].append(gc)
-    for gc in hip_FlexExt3[1]: hip_FlexExt_gc[1].append(gc)
-
-    for gc in knee_AbdAdd3[0]: knee_AbdAdd_gc[0].append(gc)
-    for gc in knee_AbdAdd3[1]: knee_AbdAdd_gc[1].append(gc)
-
-    for gc in hip_AbdAdd3[0]: hip_AbdAdd_gc[0].append(gc)
-    for gc in hip_AbdAdd3[1]: hip_AbdAdd_gc[1].append(gc)
-
-# Averaging
-knee_FlexExt_avg = avg_gcLR(knee_FlexExt_gc)
-hip_FlexExt_avg = avg_gcLR(hip_FlexExt_gc)
-knee_AbdAdd_avg = avg_gcLR(knee_AbdAdd_gc)
-hip_AbdAdd_avg = avg_gcLR(hip_AbdAdd_gc)
-
-jsonDict = {
-    'knee_FlexExt_avg' : knee_FlexExt_avg,
-    'hip_FlexExt_avg' : hip_FlexExt_avg,
-    'knee_AbdAdd_avg' : knee_AbdAdd_avg,
-    'hip_AbdAdd_avg' : hip_AbdAdd_avg,
-
-    'knee_FlexExt_gc' : knee_FlexExt_gc,
-    'hip_FlexExt_gc' : hip_FlexExt_gc,
-    'knee_AbdAdd_gc' : knee_AbdAdd_gc,
-    'hip_AbdAdd_gc' : hip_AbdAdd_gc,
-}
-
-with open('test3_gc' + '.json', 'w') as outfile:
-    json.dump(jsonDict, outfile, separators=(',', ':'))
-
-plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
-plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
-
-#plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-#plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
-
-#plot_gcLR(knee_AbdAdd_gc, 'Knee Abduction/Adduction', (-20, 20))
-#plot_gcLR(hip_AbdAdd_gc, 'Hip Abduction/Adduction', (-30, 30))
-
+poseFile = 'test3.json'
+anglesFile = 'test3_angles.json'
+writeFile = 'test3_gc.json'
+start_time = time.time()
+kinematics_process(poseFile, anglesFile, writeFile)
+print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
