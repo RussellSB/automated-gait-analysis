@@ -16,6 +16,7 @@ import io
 from PIL import Image
 import imageio
 from tqdm import trange
+import matplotlib.gridspec as gridspec
 
 #==================================================================================
 #                                   Constants
@@ -45,15 +46,27 @@ blue = "#72B6E9"
 #==================================================================================
 # Speeds up gif
 def gif_speedup(filename):
-    gif = imageio.mimread(filename)
-    imageio.mimsave(filename, gif, duration=1 / 30)
+    gif = imageio.mimread(filename, memtest=False)
+    imageio.mimsave(filename, gif, duration=1/30)
 
-# PLots and saves every pose frame of the video
-def plot_poses(dataS, dimS, dataF, dimF, partId, capId, filename):
-    ims = [] # List of images for gif
+# Saves gif of pose estimation in a capture
+def gif_pose(poseFile, i, outpath):
+    with open(poseFile, 'r') as f:
+        jsonPose = json.load(f)
 
-    for i in trange(10):
-        fig, (axF, axS) = plt.subplots(1, 2, figsize=(10,4), constrained_layout=True)
+    dataS = jsonPose[i]['dataS']
+    dimS = jsonPose[i]['dimS']
+    dataF = jsonPose[i]['dataF']
+    dimF = jsonPose[i]['dimF']
+    capId = jsonPose[i]['capId']
+    partId = jsonPose[i]['partId']
+
+    filename = outpath + partId + '-' + capId + '-PE.gif'
+    ims = []  # List of images for gif
+
+    print('Visualizing poses...')
+    for i in trange(len(dataS), ncols=100):
+        fig, (axF, axS) = plt.subplots(1, 2, figsize=(10, 4), constrained_layout=True)
         fig.suptitle('Pose estimation of \"' + partId + '-' + capId + '\"')
 
         axF.set_xlabel('Front view')
@@ -91,128 +104,161 @@ def plot_poses(dataS, dimS, dataF, dimF, partId, capId, filename):
         im = im.convert('RGB')
         ims.append(im)
         plt.close()
-
-        if (i == 10): break
     im.save(filename, save_all=True, append_images=ims, duration=0, loop=0)
     buf.close()
     gif_speedup(filename)
+    print('Saved as', '\"'+filename+'\"')
 
-# Makes a collection of figures out of what is described in the jsonFile
-def jsonPose_to_plots(poseFile, i, outpath):
+# Returns x and y lists of leg catering for no keypoint detection
+def leg_points(pose, L_or_R):
+    x, y = [], []
+
+    hip = pose[ptID['hip_' + L_or_R]]
+    knee = pose[ptID['knee_' + L_or_R]]
+    ankle = pose[ptID['ankle_' + L_or_R]]
+
+    if (hip != [-1, -1]):
+        x.append(hip[0])
+        y.append(hip[1])
+    if (knee != [-1, -1]):
+        x.append(knee[0])
+        y.append(knee[1])
+    if (ankle != [-1, -1]):
+        x.append(ankle[0])
+        y.append(ankle[1])
+
+    return x, y
+
+# Saves gif describing flexion/extension angle extraction from side view
+def gif_flexext(poseFile, anglesFile, i, outpath):
     with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
+    with open(anglesFile, 'r') as f:
+        jsonAngles = json.load(f)
 
     dataS = jsonPose[i]['dataS']
     dimS = jsonPose[i]['dimS']
+    capId = jsonPose[i]['capId']
+    partId = jsonPose[i]['partId']
+    knee_FlexExt = jsonAngles[i]['knee_FlexExt']
+    hip_FlexExt = jsonAngles[i]['hip_FlexExt']
+
+    filename = outpath + partId + '-' + capId + '-FE.gif'
+    ims = []  # List of images for gif
+    gs = gridspec.GridSpec(2, 2)
+
+    print('Visualizing flexion and extension...')
+    for i in trange(len(dataS), ncols=100):
+        fig = plt.figure(figsize=(12, 6))
+        ax1 = fig.add_subplot(gs[0, :])
+        ax2 = fig.add_subplot(gs[1, 0])
+        ax3 = fig.add_subplot(gs[1, 1])
+
+        # ax1: Leg poses
+        ax1.set_title('Flexion and Extension from Side View')
+        ax1.set(xlim=(0, dimS[0]), ylim=(0, dimS[1]))
+        pose = dataS[i]
+        x_L, y_L = leg_points(pose, 'L')
+        x_R, y_R = leg_points(pose, 'R')
+        ax1.scatter(x_L, y_L, s=20, color=red)
+        ax1.scatter(x_R, y_R, s=20, color=blue)
+        ax1.plot(x_L, y_L, color=red)
+        ax1.plot(x_R, y_R, color=blue)
+
+        # ax2: Knee flexion / extension
+        ax2.set_title('Knee Flexion/Extension')
+        ax2.set_xlabel('Frame (count)')
+        ax2.set_ylabel(r"${\Theta}$ (degrees)")
+        ax2.set(xlim=(0, len(dataS)), ylim=(-20, 80))
+        ax2.plot(knee_FlexExt[0][0:i], color=red)
+        ax2.plot(knee_FlexExt[1][0:i], color=blue)
+
+        # ax3: Hip flexion / extension
+        ax3.set_title('Hip Flexion/Extension')
+        ax3.set_xlabel('Frame (count)')
+        ax3.set(xlim=(0, len(dataS)), ylim=(-30, 60))
+        ax3.plot(hip_FlexExt[0][0:i], color=red)
+        ax3.plot(hip_FlexExt[1][0:i], color=blue)
+
+        buf = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        im = Image.open(buf)
+        im = im.convert('RGB')
+        ims.append(im)
+        plt.close()
+    im.save(filename, save_all=True, append_images=ims, duration=0, loop=0)
+    buf.close()
+    gif_speedup(filename)
+    print('Saved as', '\"' + filename + '\"')
+
+
+# Saves gif describing flexion/extension angle extraction from side view
+def gif_abdadd(poseFile, anglesFile, i, outpath):
+    with open(poseFile, 'r') as f:
+        jsonPose = json.load(f)
+    with open(anglesFile, 'r') as f:
+        jsonAngles = json.load(f)
+
     dataF = jsonPose[i]['dataF']
     dimF = jsonPose[i]['dimF']
     capId = jsonPose[i]['capId']
     partId = jsonPose[i]['partId']
+    knee_AbdAdd = jsonAngles[i]['knee_AbdAdd']
+    hip_AbdAdd = jsonAngles[i]['hip_AbdAdd']
 
-    filename = outpath + partId + '-' + capId + '-PE.gif'
-    plot_poses(dataS, dimS, dataF, dimF, partId, capId, filename)
+    filename = outpath + partId + '-' + capId + '-AA.gif'
+    ims = []  # List of images for gif
+    gs = gridspec.GridSpec(2, 2)
 
-# PLots and saves every leg pose frame of the video
-def plot_legs(data, dim, outpath):
-    i = 1
-    for pose in data:
-        fig, ax = plt.subplots()
-        ax.set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
+    print('Visualizing flexion and extension...')
+    for i in trange(len(dataF), ncols=100):
+        fig = plt.figure(figsize=(12, 6))
+        ax1 = fig.add_subplot(gs[:, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax3 = fig.add_subplot(gs[1, 1])
 
-        #Left
-        x, y =[], []
-        hip_L = pose[ptID['hip_L']]
-        if(hip_L != [-1,-1]):
-            x.append(hip_L[0])
-            y.append(hip_L[1])
-        knee_L = pose[ptID['knee_L']]
-        if(knee_L != [-1,-1]):
-            x.append(knee_L[0])
-            y.append(knee_L[1])
-        ankle_L = pose[ptID['ankle_L']]
-        if(ankle_L != [-1,-1]):
-            x.append(ankle_L[0])
-            y.append(ankle_L[1])
-        ax.scatter(x, y, s=20, color=red)
-        ax.plot(x, y, color=red)
+        # ax1: Leg poses
+        ax1.set_title('Abduction and Adduction from Front View')
+        ax1.set(xlim=(0, dimF[0]), ylim=(0, dimF[1]))
+        pose = dataF[i]
+        x_L, y_L = leg_points(pose, 'L')
+        x_R, y_R = leg_points(pose, 'R')
+        ax1.scatter(x_L, y_L, s=20, color=red)
+        ax1.scatter(x_R, y_R, s=20, color=blue)
+        ax1.plot(x_L, y_L, color=red)
+        ax1.plot(x_R, y_R, color=blue)
 
-        #Right
-        x, y = [], []
-        hip_R = pose[ptID['hip_R']]
-        if(hip_R != [-1,-1]):
-            x.append(hip_R[0])
-            y.append(hip_R[1])
-        knee_R = pose[ptID['knee_R']]
-        if(knee_R != [-1,-1]):
-            x.append(knee_R[0])
-            y.append(knee_R[1])
-        ankle_R = pose[ptID['ankle_R']]
-        if(ankle_R != [-1,-1]):
-            x.append(ankle_R[0])
-            y.append(ankle_R[1])
-        ax.scatter(x, y, s=20, color=blue)
-        ax.plot(x, y, color=blue)
+        # ax2: Knee abduction / adduction
+        ax2.set_title('Knee Abduction/Adduction')
+        ax2.set_ylabel(r"${\Theta}$ (degrees)")
+        ax2.set(xlim=(0, len(dataF)), ylim=(-20, 20))
+        ax2.plot(knee_AbdAdd[0][0:i], color=red)
+        ax2.plot(knee_AbdAdd[1][0:i], color=blue)
 
-        filename = outpath + str(i) + '.svg'
-        plt.savefig(filename)
-        i += 1
+        # ax3: Hip abduction / adduction
+        ax3.set_title('Hip Abduction/Adduction')
+        ax3.set_xlabel('Frame (count)')
+        ax3.set_ylabel(r"${\Theta}$ (degrees)")
+        ax3.set(xlim=(0, len(dataF)), ylim=(-20, 30))
+        ax3.plot(hip_AbdAdd[0][0:i], color=red)
+        ax3.plot(hip_AbdAdd[1][0:i], color=blue)
 
-# Saves leg plots of front and forward videos
-def jsonLegs_to_plots(poseFile, outpath):
-    with open(poseFile, 'r') as f:
-        jsonPose = json.load(f)
+        buf = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        im = Image.open(buf)
+        im = im.convert('RGB')
+        ims.append(im)
+        plt.close()
+    im.save(filename, save_all=True, append_images=ims, duration=0, loop=0)
+    buf.close()
+    gif_speedup(filename)
+    print('Saved as', '\"' + filename + '\"')
 
-    dataS = jsonPose[0]['dataS']
-    dimS = jsonPose[0]['dimS']
-    path1 = outpath + 'legs' + '-S/'
-    plot_legs(dataS, dimS, path1)
-
-    dataF = jsonPose[0]['dataF']
-    dimF = jsonPose[0]['dimF']
-    path2 = outpath + 'legs' + '-F/'
-    plot_legs(dataF, dimF, path2)
-
-# Saves left and right kinematics frame by frame
-def save_angles(angleList, title, yrange, outpath):
-    leftMax = len(angleList[0])
-    rightMax = len(angleList[1])
-    xmax = max(leftMax, rightMax)
-
-    leftTemp = []
-    rightTemp = []
-
-    for i in range(0, xmax):
-        fig, ax = plt.subplots()
-        ax.set_title(title)
-        ax.set_xlabel('Frame (count)')
-        ax.set_ylabel(r"${\Theta}$ (degrees)")
-        ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-
-        leftTemp.append(angleList[0][i])
-        rightTemp.append(angleList[1][i])
-
-        ax.plot(leftTemp, color=red)
-        ax.plot(rightTemp, color=blue)
-        filename = outpath + str(i) + '.svg'
-        plt.savefig(filename)
-
-# Saves raw angles for animations
-def plot_kinematics_extract(anglesFile, outpath):
-    with open(anglesFile, 'r') as f:
-       jsonAngles = json.load(f)
-
-    raw_angles = jsonAngles[0]
-    knee_FlexExt = raw_angles['knee_FlexExt']
-    hip_FlextExt = raw_angles['hip_FlexExt']
-    knee_AbdAdd = raw_angles['knee_AbdAdd']
-    hip_AbdAdd = raw_angles['hip_AbdAdd']
-
-    save_angles(knee_FlexExt, 'Knee Flexion/Extension', (-20, 80), outpath + 'knee_FlexExt/')
-    save_angles(hip_FlextExt, 'Hip Flexion/Extension', (-20, 60), outpath + 'hip_FlexExt/')
-    save_angles(knee_AbdAdd, 'Knee Abduction/Adduction', (-20, 20), outpath + 'knee_AbdAdd/')
-    save_angles(hip_AbdAdd, 'Hip Abduction/Adduction', (-30, 30), outpath + 'hip_AbdAdd/')
-
-# Plots kinematics of left or right leg
+# Plots kinematics of left or right leg, used for viewing all gait cycles
 def plot_angles(angleList, title, yrange, isRed):
     if(isRed): color = red
     else: color = blue
@@ -223,27 +269,6 @@ def plot_angles(angleList, title, yrange, isRed):
     ax.set_ylabel(r"${\Theta}$ (degrees)")
     ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
     ax.plot(angleList, color=color)
-    plt.show()
-    plt.close()
-
-# Plots left and right kinematics
-def plot_anglesLR(angleList, title, yrange):
-    leftMax = len(angleList[0])
-    rightMax = len(angleList[1])
-    xmax = max(leftMax, rightMax)
-
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Frame (count)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-
-    leftAngles = angleList[0]
-    rightAngles = angleList[1]
-
-    ax.plot(leftAngles, color=red)
-    ax.plot(rightAngles, color=blue)
-
     plt.show()
     plt.close()
 
@@ -329,4 +354,6 @@ gcFile = path + 'test3_gc.json'
 #plot_avg_gcLR_all(gcFile)
 
 i = 0
-jsonPose_to_plots(poseFile, i, path)
+#gif_pose(poseFile, i, path)
+gif_flexext(poseFile, anglesFile, i, path)
+gif_abdadd(poseFile, anglesFile, i, path)
