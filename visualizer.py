@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import json
 import io
 from PIL import Image
+import imageio
+from tqdm import trange
 
 #==================================================================================
 #                                   Constants
@@ -41,50 +43,74 @@ blue = "#72B6E9"
 #==================================================================================
 #                                   Methods
 #==================================================================================
+# Speeds up gif
+def gif_speedup(filename):
+    gif = imageio.mimread(filename)
+    imageio.mimsave(filename, gif, duration=1 / 30)
+
 # PLots and saves every pose frame of the video
-def plot_poses(data, dim, filename):
-    i = 1
+def plot_poses(dataS, dimS, dataF, dimF, partId, capId, filename):
     ims = [] # List of images for gif
-    buf = io.BytesIO()
 
-    for pose in data:
-        fig, ax = plt.subplots()
-        ax.set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
+    for i in trange(10):
+        fig, (axF, axS) = plt.subplots(1, 2, figsize=(10,4), constrained_layout=True)
+        fig.suptitle('Pose estimation of \"' + partId + '-' + capId + '\"')
 
+        axF.set_xlabel('Front view')
+        axF.set(xlim=(0, dimF[0]), ylim=(0, dimF[1]))
+
+        axS.set_xlabel('Side view')
+        axS.set(xlim=(0, dimS[0]), ylim=(0, dimS[1]))
+
+        # Front view
+        pose = dataF[i]
         for cm_ind, jp in zip(colormap_index, joint_pairs):
             joint1 = pose[jp[0]]
             joint2 = pose[jp[1]]
             if (joint1 > [-1, -1] and joint2 > [-1, -1]):
                 x = [joint1[0], joint2[0]]
                 y = [joint1[1], joint2[1]]
-                ax.plot(x, y, linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
-                ax.scatter(x, y, s=20)
+                axF.plot(x, y, linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
+                axF.scatter(x, y, s=20)
 
+        # Side view
+        pose = dataS[i]
+        for cm_ind, jp in zip(colormap_index, joint_pairs):
+            joint1 = pose[jp[0]]
+            joint2 = pose[jp[1]]
+            if (joint1 > [-1, -1] and joint2 > [-1, -1]):
+                x = [joint1[0], joint2[0]]
+                y = [joint1[1], joint2[1]]
+                axS.plot(x, y, linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
+                axS.scatter(x, y, s=20)
+
+        buf = io.BytesIO()
         plt.savefig(buf, format='png')
         buf.seek(0)
         im = Image.open(buf)
+        im = im.convert('RGB')
         ims.append(im)
-        #im.show()
+        plt.close()
 
-        if(i == 5): break
-        i += 1
-    im.save(filename, save_all=True, append_images=ims, duration=40, loop=0)
+        if (i == 10): break
+    im.save(filename, save_all=True, append_images=ims, duration=0, loop=0)
     buf.close()
+    gif_speedup(filename)
 
 # Makes a collection of figures out of what is described in the jsonFile
-def jsonPose_to_plots(poseFile, outpath):
+def jsonPose_to_plots(poseFile, i, outpath):
     with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
 
-    dataS = jsonPose[0]['dataS']
-    dimS = jsonPose[0]['dimS']
-    #path1 = outpath + jsonPose[0]['capId'] + '-S.gif'
-    plot_poses(dataS, dimS, 'test-S.gif')
+    dataS = jsonPose[i]['dataS']
+    dimS = jsonPose[i]['dimS']
+    dataF = jsonPose[i]['dataF']
+    dimF = jsonPose[i]['dimF']
+    capId = jsonPose[i]['capId']
+    partId = jsonPose[i]['partId']
 
-    dataF = jsonPose[0]['dataF']
-    dimF = jsonPose[0]['dimF']
-    #path2 = outpath + jsonPose[0]['capId'] + '-F.gif'
-    plot_poses(dataF, dimF, 'test-F.gif')
+    filename = outpath + partId + '-' + capId + '-PE.gif'
+    plot_poses(dataS, dimS, dataF, dimF, partId, capId, filename)
 
 # PLots and saves every leg pose frame of the video
 def plot_legs(data, dim, outpath):
@@ -198,6 +224,7 @@ def plot_angles(angleList, title, yrange, isRed):
     ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
     ax.plot(angleList, color=color)
     plt.show()
+    plt.close()
 
 # Plots left and right kinematics
 def plot_anglesLR(angleList, title, yrange):
@@ -218,6 +245,7 @@ def plot_anglesLR(angleList, title, yrange):
     ax.plot(rightAngles, color=blue)
 
     plt.show()
+    plt.close()
 
 # Plots each angle list gait cycle in list
 def plot_gc(gc, title, yrange, isRed):
@@ -270,10 +298,12 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
         ax.plot(avg_gcL, color=red)
         ax.plot(avg_gcR, color=blue)
         plt.show()
+        plt.close()
     else:
         plot_avg(avg_gcL, std_gcL, title, yrange, N_L, isRed=True)
         plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
         plt.show()
+        plt.close()
 
 def plot_avg_gcLR_all(gcFile):
     with open(gcFile, 'r') as f:
@@ -298,4 +328,5 @@ anglesFile = path + 'test3_angles.json'
 gcFile = path + 'test3_gc.json'
 #plot_avg_gcLR_all(gcFile)
 
-jsonPose_to_plots(poseFile, 'test')
+i = 0
+jsonPose_to_plots(poseFile, i, path)
