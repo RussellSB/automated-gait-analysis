@@ -12,6 +12,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import io
+from PIL import Image
 
 #==================================================================================
 #                                   Constants
@@ -40,8 +42,11 @@ blue = "#72B6E9"
 #                                   Methods
 #==================================================================================
 # PLots and saves every pose frame of the video
-def plot_poses(data, dim, outpath, limit):
+def plot_poses(data, dim, filename):
     i = 1
+    ims = [] # List of images for gif
+    buf = io.BytesIO()
+
     for pose in data:
         fig, ax = plt.subplots()
         ax.set(xlim=(0, dim[0]), ylim=(0, dim[1]))  # setting width and height of plot
@@ -54,29 +59,32 @@ def plot_poses(data, dim, outpath, limit):
                 y = [joint1[1], joint2[1]]
                 ax.plot(x, y, linewidth=3.0, alpha=0.7, color=plt.cm.cool(cm_ind))
                 ax.scatter(x, y, s=20)
-        filename = outpath + str(i) + '.png'
-        plt.savefig(filename)
-        if(i == limit): break
+
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        im = Image.open(buf)
+        ims.append(im)
+        #im.show()
+
+        if(i == 5): break
         i += 1
+    im.save(filename, save_all=True, append_images=ims, duration=40, loop=0)
+    buf.close()
 
 # Makes a collection of figures out of what is described in the jsonFile
 def jsonPose_to_plots(poseFile, outpath):
     with open(poseFile, 'r') as f:
         jsonPose = json.load(f)
 
-    lenF = jsonPose[0]['lenF']
-    lenS = jsonPose[0]['lenS']
-    limit = min(lenF, lenS)
-
     dataS = jsonPose[0]['dataS']
     dimS = jsonPose[0]['dimS']
-    path1 = outpath + jsonPose[0]['id'] + '-S/'
-    plot_poses(dataS, dimS, path1, limit)
+    #path1 = outpath + jsonPose[0]['capId'] + '-S.gif'
+    plot_poses(dataS, dimS, 'test-S.gif')
 
     dataF = jsonPose[0]['dataF']
     dimF = jsonPose[0]['dimF']
-    path2 = outpath + jsonPose[0]['id'] + '-F/'
-    plot_poses(dataF, dimF, path2, limit)
+    #path2 = outpath + jsonPose[0]['capId'] + '-F.gif'
+    plot_poses(dataF, dimF, 'test-F.gif')
 
 # PLots and saves every leg pose frame of the video
 def plot_legs(data, dim, outpath):
@@ -288,4 +296,6 @@ path = '..\\Test3\\'
 poseFile = path + 'test3.json'
 anglesFile = path + 'test3_angles.json'
 gcFile = path + 'test3_gc.json'
-plot_avg_gcLR_all(gcFile)
+#plot_avg_gcLR_all(gcFile)
+
+jsonPose_to_plots(poseFile, 'test')
