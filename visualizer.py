@@ -150,8 +150,8 @@ def gif_flexext(poseFile, anglesFile, i, outpath):
     print('Visualizing flexion and extension...')
     for i in trange(len(dataS), ncols=100):
         fig = plt.figure(figsize=(12, 6))
-        ax1 = fig.add_subplot(gs[0, :])
-        ax2 = fig.add_subplot(gs[1, 0])
+        ax1 = fig.add_subplot(gs[:, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
         ax3 = fig.add_subplot(gs[1, 1])
 
         # ax1: Leg poses
@@ -167,7 +167,6 @@ def gif_flexext(poseFile, anglesFile, i, outpath):
 
         # ax2: Knee flexion / extension
         ax2.set_title('Knee Flexion/Extension')
-        ax2.set_xlabel('Frame (count)')
         ax2.set_ylabel(r"${\Theta}$ (degrees)")
         ax2.set(xlim=(0, len(dataS)), ylim=(-20, 80))
         ax2.plot(knee_FlexExt[0][0:i], color=red)
@@ -175,6 +174,7 @@ def gif_flexext(poseFile, anglesFile, i, outpath):
 
         # ax3: Hip flexion / extension
         ax3.set_title('Hip Flexion/Extension')
+        ax3.set_ylabel(r"${\Theta}$ (degrees)")
         ax3.set_xlabel('Frame (count)')
         ax3.set(xlim=(0, len(dataS)), ylim=(-30, 60))
         ax3.plot(hip_FlexExt[0][0:i], color=red)
@@ -356,4 +356,4 @@ gcFile = path + 'test3_gc.json'
 i = 0
 #gif_pose(poseFile, i, path)
 gif_flexext(poseFile, anglesFile, i, path)
-gif_abdadd(poseFile, anglesFile, i, path)
+#gif_abdadd(poseFile, anglesFile, i, path)
