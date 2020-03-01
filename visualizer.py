@@ -347,13 +347,13 @@ def plot_avg_gcLR_all(gcFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Test3\\'
-poseFile = path + 'test3.json'
-anglesFile = path + 'test3_angles.json'
-gcFile = path + 'test3_gc.json'
-#plot_avg_gcLR_all(gcFile)
+path = '..\\Part03\\'
+poseFile = path + 'Part03_pose.json'
+anglesFile = path + 'Part03_angles.json'
+gcFile = path + 'Part03_gc.json'
+plot_avg_gcLR_all(gcFile)
 
-i = 0
+i = 1
 #gif_pose(poseFile, i, path)
-gif_flexext(poseFile, anglesFile, i, path)
+#gif_flexext(poseFile, anglesFile, i, path)
 #gif_abdadd(poseFile, anglesFile, i, path)

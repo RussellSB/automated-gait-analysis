@@ -157,8 +157,8 @@ def estimate_poses(path, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Test4\\'
-writeFile = path + 'test4.json'
+path = '..\\Part03\\'
+writeFile = path + 'Part03_pose.json'
 start_time = time.time()
 estimate_poses(path, writeFile)
 print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
