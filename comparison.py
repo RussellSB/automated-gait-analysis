@@ -102,8 +102,19 @@ plot_comparison(samples, 'Knee Flexion/Extension', y_range) # Plotting
 comparison1(samples[0], samples[1]) # Comparing
 
 # Using SPM1D on the instances
-angles2 = gc_PIG['knee_FlexExt_gc'][0]
-y0 = np.array(angles2)
 angles1 = gc_PE['knee_FlexExt_gc'][0]
-y1 = np.array(angles1)
-comparison2(y0, y1, 'Knee Flexion/Extension')
+y0 = np.array(angles1)
+angles2 = gc_PIG['knee_FlexExt_gc'][0]
+y1 = np.array(angles2)
+
+noise = []
+flat=[]
+for i in range(0,10):
+    arr1 = np.random.randint(y_range[1]-20, y_range[1], 101)
+    arr2 = np.random.randint(1, 2, 101)
+    noise.append(arr1)
+    flat.append(arr2)
+noise = np.array(noise)
+flat = np.array(flat)
+
+comparison2(noise, y1, 'Knee Flexion/Extension')
