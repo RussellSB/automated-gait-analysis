@@ -187,9 +187,23 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part03\\'
-readFile = path + 'Part03_pose.json'
-writeFile = path + 'Part03_angles.json'
+path = '..\\Part07\\'
+readFile = path + 'Part07_pose.json'
+writeFile = path + 'Part07_angles.json'
+start_time = time.time()
+kinematics_extract(readFile, writeFile)
+print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+
+path = '..\\Part08\\'
+readFile = path + 'Part08_pose.json'
+writeFile = path + 'Part08_angles.json'
+start_time = time.time()
+kinematics_extract(readFile, writeFile)
+print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+
+path = '..\\Part09\\'
+readFile = path + 'Part09_pose.json'
+writeFile = path + 'Part09_angles.json'
 start_time = time.time()
 kinematics_extract(readFile, writeFile)
 print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')

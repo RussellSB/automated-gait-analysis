@@ -347,10 +347,10 @@ def plot_avg_gcLR_all(gcFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part03\\'
-poseFile = path + 'Part03_pose.json'
-anglesFile = path + 'Part03_angles.json'
-gcFile = path + 'Part03_gc.json'
+path = '..\\Part06\\'
+poseFile = path + 'Part06_pose.json'
+anglesFile = path + 'Part06_angles.json'
+gcFile = path + 'Part06_gc.json'
 plot_avg_gcLR_all(gcFile)
 
 i = 1

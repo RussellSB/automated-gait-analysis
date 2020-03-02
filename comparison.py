@@ -96,10 +96,14 @@ def compare(gc_PE, gc_PIG, code):
     dict['pig_hip__R'] = gc_PIG['hip_'+code+'_gc'][1]
 
     i = 0
+    isLeft = True
+    color = red
     for key in dict:
         if (i % 2):  # COMPARE
             y1 = np.array(dict[key])
-            compare_spm1d(y0, y1, key, red)
+            compare_spm1d(y0, y1, key, color)
+            isLeft = False if(isLeft == True) else True
+            color = red if(isLeft) else blue
         else:
             y0 = np.array(dict[key])
         i += 1
