@@ -41,24 +41,26 @@ def plot_comparison(angleLists, title, yrange):
     plt.close()
 
 # Compares using the two-sample Kolmogorov-Smirnof 2 sample test
-def comparison1(samp1, samp2):
+def compare_ks(samp1, samp2):
     test = stats.ks_2samp(samp1, samp2)
     samp1_size = len(samp1)
     samp2_size = len(samp2)
 
     crit_value = 1.63 * math.sqrt((samp1_size + samp2_size) / (samp1_size * samp2_size))
     if(test.statistic > float(crit_value)):
-        print("D =", test.statistic, ">", crit_value, "\n\tTherefore kinematics differ significantly")
+        print("D =", test.statistic, ">", crit_value, "\n\tTherefore kinematics difdictr significantly")
     else:
-        print("D =", test.statistic, "<", crit_value, "\n\tTherefore kinematics do not differ significantly")
+        print("D =", test.statistic, "<", crit_value, "\n\tTherefore kinematics do not difdictr significantly")
 
     if(test.pvalue < 0.01):
-        print("P-value =", test.pvalue, "< 0.01", "\n\tTherefore kinematics differ significantly")
+        print("P-value =", test.pvalue, "< 0.01", "\n\tTherefore kinematics difdictr significantly")
     else:
-        print("P-value =", test.pvalue, "> 0.01", "\n\tTherefore kinematics do not differ significantly")
+        print("P-value =", test.pvalue, "> 0.01", "\n\tTherefore kinematics do not difdictr significantly")
+
+# TODO: Compares for either flexion/extension or abduction/adduction with respect to avg using kolmogorov-smirnof
 
 # Compares using Statistical Parametric Mapping 1D 2 sample t-test
-def comparison2(y0, y1, title):
+def compare_spm1d(y0, y1, title, color):
     alpha = 0.01
     t = spm1d.stats.ttest2(y0, y1, equal_var=False)
     ti = t.inference(alpha, two_tailed=False)
@@ -66,7 +68,7 @@ def comparison2(y0, y1, title):
     plt.figure(figsize=(8, 3.5))
     ax = plt.axes((0.1, 0.15, 0.35, 0.8))
     spm1d.plot.plot_mean_sd(y0)
-    spm1d.plot.plot_mean_sd(y1, linecolor='r', facecolor='r')
+    spm1d.plot.plot_mean_sd(y1, linecolor=color, facecolor=color)
     ax.axhline(y=0, color='k', linestyle=':')
 
     ax.set_xlabel('Time (%)')
@@ -79,6 +81,35 @@ def comparison2(y0, y1, title):
     ax.set_xlabel('Time (%)')
     plt.show()
     plt.close()
+
+# Compares for either flexion/extension or abduction/adduction with respect to instances using spm1d
+def compare(gc_PE, gc_PIG, code):
+    dict = {}
+    dict['pe_knee_L'] = gc_PE['knee_'+code+'_gc'][0]
+    dict['pig_knee_L'] = gc_PIG['knee_'+code+'_gc'][0]
+    dict['pe_knee_R'] = gc_PE['knee_'+code+'_gc'][1]
+    dict['pig_knee_R'] = gc_PIG['knee_'+code+'_gc'][1]
+
+    dict['pe_hip_L'] = gc_PE['hip_'+code+'_gc'][0]
+    dict['pig_hip_L'] = gc_PIG['hip_'+code+'_gc'][0]
+    dict['pe_hip_R'] = gc_PE['hip_'+code+'_gc'][1]
+    dict['pig_hip__R'] = gc_PIG['hip_'+code+'_gc'][1]
+
+    i = 0
+    for key in dict:
+        if (i % 2):  # COMPARE
+            y1 = np.array(dict[key])
+            compare_spm1d(y0, y1, key, red)
+        else:
+            y0 = np.array(dict[key])
+        i += 1
+
+# Compares for both flexion/extension and abbduction/adduction
+def compare_all(gc_PE, gc_PIG):
+    # Flexion and Extension comparison (CODE REPEATED FOR FLEXEXT OR ABDADD)
+    compare(gc_PE, gc_PIG, 'FlexExt')
+    compare(gc_PE, gc_PIG, 'AbdAdd')
+
 #==================================================================================
 #                                   Main
 #==================================================================================
@@ -92,29 +123,15 @@ with open(filePIG, 'r') as f:
     gc_PIG = json.load(f)
 
 # Using Kolmogorof-Smirnof test on the average
-y_range = (-20, 80)
-angles1 = gc_PE['knee_FlexExt_avg']['gcL_avg']
-angles2 = gc_PIG['knee_FlexExt_avg']['gcL_avg']
-noise = np.random.randint(y_range[0], y_range[1], 101)
-flat = np.random.randint(0, 1, 101)
-samples = [angles1, angles2, noise, flat]
-plot_comparison(samples, 'Knee Flexion/Extension', y_range) # Plotting
-comparison1(samples[0], samples[1]) # Comparing
+
+#y_range = (-20, 80)
+#angles1 = gc_PE['knee_'+code+'_avg']['gcL_avg']
+#angles2 = gc_PIG['knee_'+code+'_avg']['gcL_avg']
+#noise = np.random.randint(y_range[0], y_range[1], 101)
+#flat = np.random.randint(0, 1, 101)
+#samples = [angles1, angles2, noise, flat]
+#plot_comparison(samples, 'Knee Flexion/Extension', y_range) # Plotting
+#comparison1(samples[0], samples[1]) # Comparing
 
 # Using SPM1D on the instances
-angles1 = gc_PE['knee_FlexExt_gc'][0]
-y0 = np.array(angles1)
-angles2 = gc_PIG['knee_FlexExt_gc'][0]
-y1 = np.array(angles2)
-
-noise = []
-flat=[]
-for i in range(0,10):
-    arr1 = np.random.randint(y_range[1]-20, y_range[1], 101)
-    arr2 = np.random.randint(1, 2, 101)
-    noise.append(arr1)
-    flat.append(arr2)
-noise = np.array(noise)
-flat = np.array(flat)
-
-comparison2(noise, y1, 'Knee Flexion/Extension')
+compare_all(gc_PE, gc_PIG)
