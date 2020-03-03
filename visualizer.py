@@ -4,8 +4,6 @@
 #                           Input: JSON, Output: Plots
 #               Visualizes saved graph structure of poses, as well as
 #               saved raw kinematics, and processed kinematics
-#----------------------------------------------------------------------------------
-#==================================================================================
 #==================================================================================
 #                                   Imports
 #==================================================================================
@@ -340,17 +338,17 @@ def plot_avg_gcLR_all(gcFile):
     hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
 
     plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
+    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=True)
     plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
     plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part06\\'
-poseFile = path + 'Part06_pose.json'
-anglesFile = path + 'Part06_angles.json'
-gcFile = path + 'Part06_gc.json'
+path = '..\\Part09\\'
+poseFile = path + 'Part09_pose.json'
+anglesFile = path + 'Part09_angles.json'
+gcFile = path + 'Part09_gc.json'
 plot_avg_gcLR_all(gcFile)
 
 i = 1

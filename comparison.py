@@ -4,8 +4,6 @@
 #                      Input: Gait cycles, Output: Similarity
 #               Compares the kinematics of my automated system with
 #                       the lab's Vicon Plug-In-Gait System
-#----------------------------------------------------------------------------------
-#==================================================================================
 #==================================================================================
 #                                   Imports
 #==================================================================================
@@ -150,14 +148,3 @@ compare_textually(gc_PE, gc_PIG, 'AbdAdd')
 # Using SPM1D on the instances
 compare_visually(gc_PE, gc_PIG, 'FlexExt')
 compare_visually(gc_PE, gc_PIG, 'AbdAdd')
-
-#####################################################################################
-# Using Kolmogorof-Smirnof test on the average
-#y_range = (-20, 80)
-#angles1 = gc_PE['knee_'+code+'_avg']['gcL_avg']
-#angles2 = gc_PIG['knee_'+code+'_avg']['gcL_avg']
-#noise = np.random.randint(y_range[0], y_range[1], 101)
-#flat = np.random.randint(0, 1, 101)
-#samples = [angles1, angles2, noise, flat]
-#plot_comparison(samples, 'Knee Flexion/Extension', y_range) # Plotting
-#comparison1(samples[0], samples[1]) # Comparing

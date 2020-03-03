@@ -5,7 +5,6 @@
 #               Given a front/back view and side view video of someone
 #               walking, this will generate a json, describing the pose
 #               via key-points in graph form, throughout every frame.
-#----------------------------------------------------------------------------------
 #==================================================================================
 # TODO: Later expand to store more than just one pair of videos per person (for average)
 
