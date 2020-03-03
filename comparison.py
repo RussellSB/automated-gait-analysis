@@ -26,7 +26,7 @@ blue = "#72B6E9"
 #                                   Methods
 #==================================================================================
 # Compares using the two-sample Kolmogorov-Smirnof 2 sample test
-def compare_ks(samp1, samp2, title, LorR):
+def compare_ks(samp1, samp2, title, isLeft):
     test = stats.ks_2samp(samp1, samp2)
     samp1_size = len(samp1)
     samp2_size = len(samp2)
@@ -40,12 +40,44 @@ def compare_ks(samp1, samp2, title, LorR):
     if(test.pvalue < 0.01):
         isDifferent1 = True
 
-    print(title+'\t'+LorR+'\t\t'+test.pvalue+'\t'+test.statistic+'\t'+crit_value+'\t'+isDifferent1+'\t'+isDifferent2)
+    LorR = 'L' if isLeft else 'R'
+    pval = '%.2f' % test.pvalue
+    d = '%.2f' % test.statistic
+    cv = '%.2f' % crit_value
+
+    print(title+'\t'+LorR+'\t\t'+pval+'\t'+str(0.01)+'\t'+d+'\t'+cv+'\t'+str(isDifferent1)[0]+'\t'+str(isDifferent2)[0])
 
 # Compares textually for either flexion/extension or abduction/adduction with respect to average using spm1d
 def compare_textually(gc_PE, gc_PIG, code):
-    print('Title'+'\t'+'L/R'+'\t\t'+'p-value'+'\t'+'alpha'+'\t'+'D'+'\t'+'crit_value'+'\t'+'isDifferent1'+'\t'+'isDifferent2')
+    print('===========================================================================')
+    print('Title'+'\t\t\t'+'L/R'+'\t\t'+'p'+'\t\t'+'a'+'\t\t'+'D'+'\t\t'+'cv'+'\t\t'+'M1'+'\t'+'M2')
+    print('===========================================================================')
     # TODO: finish off
+
+    dict = {}
+    dict['pe_knee_L'] = gc_PE['knee_' + code + '_avg']['gcL_avg']
+    dict['pig_knee_L'] = gc_PIG['knee_' + code + '_avg']['gcL_avg']
+    dict['pe_knee_R'] = gc_PE['knee_' + code + '_avg']['gcR_avg']
+    dict['pig_knee_R'] = gc_PIG['knee_' + code + '_avg']['gcR_avg']
+
+    dict['pe_hip_L'] = gc_PE['hip_' + code + '_avg']['gcL_avg']
+    dict['pig_hip_L'] = gc_PIG['hip_' + code + '_avg']['gcL_avg']
+    dict['pe_hip_R'] = gc_PE['hip_' + code + '_avg']['gcR_avg']
+    dict['pig_hip_R'] = gc_PIG['hip_' + code + '_avg']['gcR_avg']
+
+    i = 0
+    isLeft = True
+    for key in dict:
+        if (i % 2):  # COMPARE
+            y1 = dict[key]
+            title = key.split('_')[1] + '(' + key.split('_')[2] + ')' + code
+            compare_ks(y0, y1, title, isLeft)
+
+            isLeft = False if isLeft else True
+        else:
+            y0 = dict[key]
+        i += 1
+    print('===========================================================================\n')
 
 # Compares using Statistical Parametric Mapping 1D 2 sample t-test
 def compare_spm1d(y0, y1):
@@ -110,6 +142,10 @@ with open(filePE, 'r') as f:
     gc_PE = json.load(f)
 with open(filePIG, 'r') as f:
     gc_PIG = json.load(f)
+
+# Using Kolmogorov-Smirnoff on the instances
+compare_textually(gc_PE, gc_PIG, 'FlexExt')
+compare_textually(gc_PE, gc_PIG, 'AbdAdd')
 
 # Using SPM1D on the instances
 compare_visually(gc_PE, gc_PIG, 'FlexExt')
