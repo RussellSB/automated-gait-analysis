@@ -1,5 +1,5 @@
 #==================================================================================
-#                               FEATURE_NORMALIZATION
+#                               KINEMATICS_PROCESSING
 #----------------------------------------------------------------------------------
 #                    Input: Pose Json and Raw angles, Output: Gait Cycle graphs
 #               Given a JSON describing angles of joints throughout a walk,

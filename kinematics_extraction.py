@@ -1,5 +1,5 @@
 #==================================================================================
-#                               FEATURE_EXTRACTION
+#                               KINEMATICS_EXTRACTION
 #----------------------------------------------------------------------------------
 #                      Input: Pose sequence, Output: Raw kinematics
 #               Given a JSON describing poses throughout two video views,

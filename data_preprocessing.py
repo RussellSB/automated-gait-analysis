@@ -142,16 +142,16 @@ for gc in kinematics_artificial:
     data_na.append(gc)
     labels_na.append(1)
 
-with open('..\\labdata.pickle', 'wb') as f:
+with open('..\\classifier_data\\labdata.pickle', 'wb') as f:
     pickle.dump(data, f)
-with open('..\\labels_id.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_id.pickle', 'wb') as f:
     pickle.dump(labels_id, f)
-with open('..\\labels_age.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_age.pickle', 'wb') as f:
     pickle.dump(labels_age, f)
-with open('..\\labels_gen.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_gen.pickle', 'wb') as f:
     pickle.dump(labels_gen, f)
 
-with open('..\\data_na.pickle', 'wb') as f:
+with open('..\\classifier_data\\data_na.pickle', 'wb') as f:
     pickle.dump(data_na, f)
-with open('..\\labels_na.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_na.pickle', 'wb') as f:
     pickle.dump(labels_na, f)
