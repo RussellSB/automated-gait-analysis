@@ -10,6 +10,9 @@
 import numpy as np
 import json
 import pickle
+import matplotlib.pyplot as plt
+import random
+import math
 
 #==================================================================================
 #                                   Constants
@@ -71,6 +74,31 @@ def getgc_glob(gc_PE):
     print(len(kinematics))
     return kinematics
 
+# Returns a list of n 2d arrays that artificially simulate abnormal gait cycles
+def get_gcart(n):
+    kinematics_artificial = []
+
+    for _ in range(0, n):
+        arr2d = []
+
+        k = [1 / 4, 1 / 2, 1, 2]  # Constants for xrange
+        x = np.linspace(0, 12.5 * random.choice(k), 101)
+        noise = np.random.normal(0, 0.1, 101)
+
+        knee_FlexExt = np.sin(x) * 30 + noise + 30
+        hip_FlexExt = np.cos(x) * 30 + noise + 10
+        knee_AbdAdd = np.sin(x) * 5 + noise + 5
+        hip_AbdAdd = np.sin(x) * 10 + noise
+
+        for _ in range(0,2): arr2d.append(knee_FlexExt)
+        for _ in range(0, 2): arr2d.append(hip_FlexExt)
+        for _ in range(0, 2): arr2d.append(knee_AbdAdd)
+        for _ in range(0, 2): arr2d.append(hip_AbdAdd)
+
+        arr2d = np.array(arr2d)
+        kinematics_artificial.append(arr2d)
+    return kinematics_artificial
+
 #==================================================================================
 #                                   Main
 #==================================================================================
@@ -80,6 +108,7 @@ labels_na = []
 labels_age = []
 labels_gen = []
 
+# Prepares gait data collected from the lab
 for i in range(1, 10):
     id = str(i)
     id = '0' + id if len(id) < 2 else i
@@ -90,10 +119,15 @@ for i in range(1, 10):
         gc_PE = json.load(f)
 
     kinematics = getgc_glob(gc_PE)
+
     for gc in kinematics:
         na = partInfo[str(i)][0]
-        age = partInfo[str(i)][1]
+        na = 0 if na == 'N' else 1
+
         gen = partInfo[str(i)][2]
+        gen = 0 if gen == 'F' else 1
+
+        age = partInfo[str(i)][1]
 
         data.append(gc)
         labels_id.append(i)
@@ -101,13 +135,23 @@ for i in range(1, 10):
         labels_age.append(age)
         labels_gen.append(gen)
 
-    with open('..\\data.pickle', 'wb') as f:
-        pickle.dump(data, f)
-    with open('..\\labels_id.pickle', 'wb') as f:
-        pickle.dump(labels_id, f)
-    with open('..\\labels_na.pickle', 'wb') as f:
-        pickle.dump(labels_na, f)
-    with open('..\\labels_age.pickle', 'wb') as f:
-        pickle.dump(labels_age, f)
-    with open('..\\labels_gen.pickle', 'wb') as f:
-        pickle.dump(labels_gen, f)
+# Prepares artificial gait data simulating abnormalities
+kinematics_artificial = get_gcart(20)
+data_na = data
+for gc in kinematics_artificial:
+    data_na.append(gc)
+    labels_na.append(1)
+
+with open('..\\labdata.pickle', 'wb') as f:
+    pickle.dump(data, f)
+with open('..\\labels_id.pickle', 'wb') as f:
+    pickle.dump(labels_id, f)
+with open('..\\labels_age.pickle', 'wb') as f:
+    pickle.dump(labels_age, f)
+with open('..\\labels_gen.pickle', 'wb') as f:
+    pickle.dump(labels_gen, f)
+
+with open('..\\data_na.pickle', 'wb') as f:
+    pickle.dump(data_na, f)
+with open('..\\labels_na.pickle', 'wb') as f:
+    pickle.dump(labels_na, f)

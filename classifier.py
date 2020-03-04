@@ -7,6 +7,10 @@
 #                                   Imports
 #==================================================================================
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager
+from sklearn import svm
 
 #==================================================================================
 #                                   Methods
@@ -15,3 +19,7 @@ import pickle
 #==================================================================================
 #                                   Main
 #==================================================================================
+with open('..\\data_na.pickle', 'rb') as f:
+    data_na = pickle.load(f)
+with open('..\\labels_na.pickle', 'rb') as f:
+    labels_na = pickle.load(f)
