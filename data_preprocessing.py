@@ -136,13 +136,13 @@ for i in range(1, 10):
         labels_gen.append(gen)
 
 # Prepares artificial gait data simulating abnormalities
-kinematics_artificial = get_gcart(20)
-data_na = data
+kinematics_artificial = get_gcart(len(data))
+data_na = [x for x in data]
 for gc in kinematics_artificial:
     data_na.append(gc)
     labels_na.append(1)
 
-with open('..\\classifier_data\\labdata.pickle', 'wb') as f:
+with open('..\\classifier_data\\data.pickle', 'wb') as f:
     pickle.dump(data, f)
 with open('..\\classifier_data\\labels_id.pickle', 'wb') as f:
     pickle.dump(labels_id, f)
