@@ -70,9 +70,9 @@ def evaluate_nn_summary(model, X_test, y_test):
 #==================================================================================
 #                                   Main
 #==================================================================================
-with open('..\\classifier_data\\data.pickle', 'rb') as f:
+with open('..\\classifier_data\\data_na.pickle', 'rb') as f:
     data = pickle.load(f)
-with open('..\\classifier_data\\labels_gen.pickle', 'rb') as f:
+with open('..\\classifier_data\\labels_na.pickle', 'rb') as f:
     labels = pickle.load(f)
 
 X = np.array([np.array(x).transpose() for x in data])  # (samples, time-steps, features)
@@ -82,14 +82,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle
 
 ###
 verbose = 1
-epochs = 10
-batch_size = 32
+epochs = 20
+batch_size = 64
 n_outputs = 2
 n_timesteps, n_features = X.shape[1], X.shape[2]
 
 model = Sequential()
-model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(n_timesteps, n_features)))
-model.add(Conv1D(filters=64, kernel_size=4, activation='relu'))
+model.add(Conv1D(filters=64, kernel_size=10, activation='relu', input_shape=(n_timesteps, n_features)))
+model.add(Conv1D(filters=64, kernel_size=10, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Flatten())
 model.add(Dense(1, activation='relu'))
