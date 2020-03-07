@@ -110,7 +110,7 @@ def video_to_listPose(vid):
     return dimensions, pose_data_vid
 
 # Given two videos it will output the json describing all poses in both videos
-def videos_to_jsonPose(vidSide, vidFront, partId, capId, isNormal):
+def videos_to_jsonPose(vidSide, vidFront, partId, capId):
     dimensions_side, pose_vid_side = video_to_listPose(vidSide)
     dimensions_front, pose_vid_front = video_to_listPose(vidFront)
 
@@ -123,7 +123,6 @@ def videos_to_jsonPose(vidSide, vidFront, partId, capId, isNormal):
     jsonPose_dict = {
         'partId': partId,
         'capId': capId,
-        'normal': isNormal,
         'dimS': dimensions_side,
         'lenS' : len(pose_vid_side),
         'dimF' : dimensions_front,
@@ -142,10 +141,8 @@ def estimate_poses(path, writeFile):
         if (i % 2):
             print('Capture pair', '('+ str(int((i+1)/2)) +'/6)', ':', '\"'+fs_pair[1]+'\"', ',', '\"'+fs_pair[0]+'\"')
             capId = fs_pair[0].split('-')[1]
-            isNormalTag = fs_pair[0].split('-')[2]
-            isNormal = True if isNormalTag == 'N' else False
             partId = fs_pair[0].split('-')[0].split('\\')[2]
-            jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId, isNormal)
+            jsonPose_dict = videos_to_jsonPose(fs_pair[1], fs_pair[0], partId, capId)
             jsonPose_list.append(jsonPose_dict)
             fs_pair.clear()
         i += 1
