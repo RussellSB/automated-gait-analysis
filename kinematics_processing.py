@@ -279,26 +279,26 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part07\\'
-poseFile = path + 'Part07_pose.json'
-anglesFile = path + 'Part07_angles.json'
-writeFile = path + 'Part07_gc.json'
+path = '..\\Part10\\'
+poseFile = path + 'Part10_pose.json'
+anglesFile = path + 'Part10_angles.json'
+writeFile = path + 'Part10_gc.json'
 start_time = time.time()
 kinematics_process(poseFile, anglesFile, writeFile)
 print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
 
-path = '..\\Part08\\'
-poseFile = path + 'Part08_pose.json'
-anglesFile = path + 'Part08_angles.json'
-writeFile = path + 'Part08_gc.json'
+path = '..\\Part11\\'
+poseFile = path + 'Part11_pose.json'
+anglesFile = path + 'Part11_angles.json'
+writeFile = path + 'Part11_gc.json'
 start_time = time.time()
 kinematics_process(poseFile, anglesFile, writeFile)
 print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
 
-path = '..\\Part09\\'
-poseFile = path + 'Part09_pose.json'
-anglesFile = path + 'Part09_angles.json'
-writeFile = path + 'Part09_gc.json'
+path = '..\\Part12\\'
+poseFile = path + 'Part12_pose.json'
+anglesFile = path + 'Part12_angles.json'
+writeFile = path + 'Part12_gc.json'
 start_time = time.time()
 kinematics_process(poseFile, anglesFile, writeFile)
 print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')

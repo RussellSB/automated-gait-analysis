@@ -22,6 +22,7 @@ partInfo = {
     '1':('N', 23, 'M'), '2':('N', 20, 'M'), '3':('N', 20, 'M'),
     '4':('N', 20, 'F'), '5':('N', 22, 'M'), '6':('N', 19, 'M'),
     '7':('N', 20, 'F'), '8':('N', 20, 'M'), '9':('N', 22, 'F'),
+    '10':('N', 22, 'F'), '11':('N', 19, 'F'), '12':('N', 20, 'M')
 }
 
 #==================================================================================
@@ -109,7 +110,7 @@ labels_age = []
 labels_gen = []
 
 # Prepares gait data collected from the lab
-for i in range(1, 10):
+for i in range(1, 13):
     id = str(i)
     id = '0' + id if len(id) < 2 else i
     part = 'Part' + str(id)
@@ -136,7 +137,7 @@ for i in range(1, 10):
         labels_gen.append(gen)
 
 # Prepares artificial gait data simulating abnormalities
-kinematics_artificial = get_gcart(len(data))
+kinematics_artificial = get_gcart(int(len(data)/2))
 data_na = [x for x in data]
 for gc in kinematics_artificial:
     data_na.append(gc)
@@ -148,10 +149,10 @@ with open('..\\classifier_data\\labels_id.pickle', 'wb') as f:
     pickle.dump(labels_id, f)
 with open('..\\classifier_data\\labels_age.pickle', 'wb') as f:
     pickle.dump(labels_age, f)
-with open('..\\classifier_data\\labels_gen.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_gender.pickle', 'wb') as f:
     pickle.dump(labels_gen, f)
 
 with open('..\\classifier_data\\data_na.pickle', 'wb') as f:
     pickle.dump(data_na, f)
-with open('..\\classifier_data\\labels_na.pickle', 'wb') as f:
+with open('..\\classifier_data\\labels_abnormality.pickle', 'wb') as f:
     pickle.dump(labels_na, f)

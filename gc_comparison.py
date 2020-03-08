@@ -132,9 +132,8 @@ def compare_visually(gc_PE, gc_PIG, code):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part01\\'
-filePE = path + 'Part01_gc.json'
-filePIG = '..\\Part06\\' + 'Part06_gc.json' # For now, note he has weird knee abd/add
+filePE = '..\\Part01\\' + 'Part01_gc.json'
+filePIG = '..\\Part08\\' + 'Part08_gc.json' # For now, note he has weird knee abd/add
 
 with open(filePE, 'r') as f:
     gc_PE = json.load(f)
