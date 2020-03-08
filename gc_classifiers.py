@@ -6,31 +6,29 @@
 #==================================================================================
 #                                   Imports
 #==================================================================================
-import itertools
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.font_manager
 from sklearn.model_selection import train_test_split
-# import tensorflow as tf
-# from tensorflow.keras import datasets, layers, models
-from matplotlib import pyplot
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Dropout, Reshape, GlobalAveragePooling1D
+from keras.layers import Dense, Dropout, GlobalAveragePooling1D
 from keras.layers.convolutional import Conv1D, MaxPooling1D
 from sklearn import metrics
 from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+import random
 
 #==================================================================================
 #                                   Constants
 #==================================================================================
 LABEL = 'gender'
 TEST_SIZE = 0.2
+SEED = random.randint(1, 1000)
 
 #==================================================================================
 #                                   Methods
 #==================================================================================
-
 # Evaluates the sklearn model w.r.t confusion matrix and ground-truth metrics
 def evaluate_sk_summary(classifier, X_test, y_test, sklearnType, cmap):
     predicted = classifier.predict(X_test)
@@ -48,6 +46,15 @@ def evaluate_sk_summary(classifier, X_test, y_test, sklearnType, cmap):
     plt.show()
     plt.close()
 
+# Plots confusion matrix without requiring a classifier
+def plot_cm(cm, labels, name, cmap, score):
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    disp.plot(include_values=True, cmap=cmap)
+    plt.xlabel('Predicted ' + LABEL)
+    plt.ylabel('True ' + LABEL)
+    plt.title(name + ' (Accuracy: {:.2f})'.format(score))
+    plt.show()
+
 # Evaluates the keras neural network model w.r.t confusion matrix and ground-truth metrics
 def evaluate_nn_summary(model, X_test, y_test, batch_size):
     predictions = model.predict(X_test)
@@ -55,26 +62,16 @@ def evaluate_nn_summary(model, X_test, y_test, batch_size):
     for p in predictions:
         p = 1 if p[1] > p[0] else 0
         pred.append(p)
-    print('Classification Report NN:')
+    print('Classification Report CNN:')
     print(metrics.classification_report(y_test, pred))
-
     cm = metrics.confusion_matrix(y_test, pred)
     print('Confusion matrix for CNN:\n', cm)
-
     lab = np.unique(pred)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=lab)
-    disp.plot(include_values=True, cmap=plt.cm.Reds)
-
-    plt.xlabel('Predicted ' + LABEL)
-    plt.ylabel('True ' + LABEL)
     _, score = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=0)
-    plt.title('CNN (Accuracy: {:.2f})'.format(score))
-
-    plt.show()
+    plot_cm(cm, lab, 'CNN', plt.cm.Reds, score)
 
 # Define and Evaluate a Logistic Regression Model
 def lr(X_train, X_test, y_train, y_test):
-    from sklearn.linear_model import LogisticRegression
     classifier = LogisticRegression()
     classifier.fit(X_train, y_train)
     evaluate_sk_summary(classifier, X_test, y_test, 'LR', plt.cm.Blues)
@@ -82,8 +79,7 @@ def lr(X_train, X_test, y_train, y_test):
 
 # Define and Evaluate a Logistic Regression Model
 def svm(X_train, X_test, y_train, y_test):
-    from sklearn import svm
-    classifier = svm.LinearSVC()
+    classifier = LinearSVC()
     classifier.fit(X_train, y_train)
     evaluate_sk_summary(classifier, X_test, y_test, 'SVM', plt.cm.Greens)
     return classifier
@@ -102,7 +98,7 @@ def flattenData(data):
 def mlModels(data, labels):
     X = flattenData(data)
     y = np.array(labels)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=SEED)
 
     return lr(X_train, X_test, y_train, y_test), svm(X_train, X_test, y_train, y_test)
 
@@ -111,33 +107,35 @@ def nn(data, labels):
     # y = np.array([y-1 for y in labels])
     y = np.array(labels)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
 
-    epochs = 50
-    batch_size = 400
+    filter1 = 101
+    filter2 = 162
+    kernel = 12
+    dropout_rate = 0.5
+
     n_outputs = len(np.unique(labels))
     n_timesteps, n_features = X.shape[1], X.shape[2]
 
+    # https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
     model_m = Sequential()
-    model_m.add(Conv1D(100, 10, activation='relu', input_shape=(n_timesteps, n_features)))
-    model_m.add(Conv1D(100, 10, activation='relu'))
+    model_m.add(Conv1D(filter1, kernel, activation='relu', input_shape=(n_timesteps, n_features)))
+    model_m.add(Conv1D(filter1, kernel, activation='relu'))
     model_m.add(MaxPooling1D(3))
-    model_m.add(Conv1D(160, 10, activation='relu'))
-    model_m.add(Conv1D(160, 10, activation='relu'))
+    model_m.add(Conv1D(filter2, kernel, activation='relu'))
+    model_m.add(Conv1D(filter2, kernel, activation='relu'))
     model_m.add(GlobalAveragePooling1D())
-    model_m.add(Dropout(0.5))
-    model_m.add(Dense(n_outputs, activation='softmax'))  # 1 should be n_outputs
-    print(model_m.summary())
-
+    model_m.add(Dropout(dropout_rate))
+    model_m.add(Dense(n_outputs, activation='softmax'))
+    #print(model_m.summary())
     model_m.compile(loss='sparse_categorical_crossentropy',
                     optimizer='adam', metrics=['accuracy'])
 
-    history = model_m.fit(X_train, y_train,
-                          batch_size=batch_size, epochs=epochs,
-                          verbose=1)  # validation_split = 0.2
+    epochs = 50
+    #TODO: Might consider batch and CV, after part sepera
 
-    evaluate_nn_summary(model_m, X_test, y_test, batch_size)
-
+    model_m.fit(X_train, y_train, epochs=epochs, verbose=1)
+    evaluate_nn_summary(model_m, X_test, y_test, batch_size=None)
     return model_m
 
 #==================================================================================
