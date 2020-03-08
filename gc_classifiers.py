@@ -60,19 +60,16 @@ def evaluate_nn_summary(model, X_test, y_test, batch_size):
 
     cm = metrics.confusion_matrix(y_test, pred)
     print('Confusion matrix for CNN:\n', cm)
-    plt.imshow(cm, cmap=plt.cm.Reds)
 
-    lab = np.sort(np.unique(pred))
-
-    plt.xticks(lab)
-    plt.yticks(lab)
-    plt.ylim(1.5, -0.5)
+    lab = np.unique(pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=lab)
+    disp.plot(include_values=True, cmap=plt.cm.Reds)
 
     plt.xlabel('Predicted ' + LABEL)
     plt.ylabel('True ' + LABEL)
     _, score = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=0)
     plt.title('CNN (Accuracy: {:.2f})'.format(score))
-    plt.colorbar()
+
     plt.show()
 
 # Define and Evaluate a Logistic Regression Model
@@ -139,10 +136,7 @@ def nn(data, labels):
                           batch_size=batch_size, epochs=epochs,
                           verbose=1)  # validation_split = 0.2
 
-
-
-
-    #evaluate_nn_summary(model_m, X_test, y_test, batch_size)
+    evaluate_nn_summary(model_m, X_test, y_test, batch_size)
 
     return model_m
 
@@ -154,5 +148,5 @@ with open('..\\classifier_data\\data.pickle', 'rb') as f:
 with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
     labels = pickle.load(f)
 
-#mlModels(data, labels)
+mlModels(data, labels)
 nn(data, labels)
