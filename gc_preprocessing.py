@@ -123,10 +123,12 @@ for i in range(1, 13):
 
     for gc in kinematics:
         na = partInfo[str(i)][0]
-        na = 0 if na == 'N' else 1
+        #na = 0 if na == 'N' else 1
+        na = 'Normal' if na == 'N' else 'Abnormal'
 
         gen = partInfo[str(i)][2]
-        gen = 0 if gen == 'F' else 1
+        #gen = 0 if gen == 'F' else 1
+        gen = 'Female' if gen == 'F' else 'Male'
 
         age = partInfo[str(i)][1]
 
@@ -141,7 +143,7 @@ kinematics_artificial = get_gcart(int(len(data)/2))
 data_na = [x for x in data]
 for gc in kinematics_artificial:
     data_na.append(gc)
-    labels_na.append(1)
+    labels_na.append('Abnormal')
 
 with open('..\\classifier_data\\data.pickle', 'wb') as f:
     pickle.dump(data, f)

@@ -7,6 +7,7 @@
 #                                   Imports
 #==================================================================================
 import pickle
+import keras
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -18,13 +19,16 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 import random
+from sklearn.preprocessing import LabelEncoder
 
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'gender'
+LABEL = 'age'
+BINARY = False
 TEST_SIZE = 0.2
-SEED = random.randint(1, 1000)
+SEED = random.randint(1, 1000) # 363, 161 - a victory
+DISP_LABELS = []
 
 #==================================================================================
 #                                   Methods
@@ -38,7 +42,6 @@ def evaluate_sk_summary(classifier, X_test, y_test, sklearnType, cmap):
                                          include_values=True, cmap=cmap)
     disp.figure_.suptitle("")
     print("Confusion matrix for " + sklearnType + ":\n%s" % disp.confusion_matrix)
-
     plt.xlabel('Predicted ' + LABEL)
     plt.ylabel('True ' + LABEL)
     score = classifier.score(X_test, y_test)
@@ -56,19 +59,14 @@ def plot_cm(cm, labels, name, cmap, score):
     plt.show()
 
 # Evaluates the keras neural network model w.r.t confusion matrix and ground-truth metrics
-def evaluate_nn_summary(model, X_test, y_test, batch_size):
-    predictions = model.predict(X_test)
-    pred = []
-    for p in predictions:
-        p = 1 if p[1] > p[0] else 0
-        pred.append(p)
+def evaluate_nn_summary(model, X_test, y_test, disp_labels):
+    pred = model.predict_classes(X_test)
     print('Classification Report CNN:')
     print(metrics.classification_report(y_test, pred))
     cm = metrics.confusion_matrix(y_test, pred)
     print('Confusion matrix for CNN:\n', cm)
-    lab = np.unique(pred)
-    _, score = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=0)
-    plot_cm(cm, lab, 'CNN', plt.cm.Reds, score)
+    score = sum(y_test == pred) / len(y_test)
+    plot_cm(cm, disp_labels, 'CNN', plt.cm.Reds, score)
 
 # Define and Evaluate a Logistic Regression Model
 def lr(X_train, X_test, y_train, y_test):
@@ -104,17 +102,21 @@ def mlModels(data, labels):
 
 def nn(data, labels):
     X = np.array([np.array(x).transpose() for x in data])  # (samples, time-steps, features)
+
     # y = np.array([y-1 for y in labels])
-    y = np.array(labels)
+    disp_labels = sorted(list(dict.fromkeys(labels).keys()))
+    label_encoder = LabelEncoder()
+    y = label_encoder.fit_transform(labels)
+    n_outputs = len(np.unique(y))
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
+    y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
 
     filter1 = 101
     filter2 = 162
-    kernel = 12
+    kernel = 10
     dropout_rate = 0.5
 
-    n_outputs = len(np.unique(labels))
     n_timesteps, n_features = X.shape[1], X.shape[2]
 
     # https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
@@ -128,14 +130,16 @@ def nn(data, labels):
     model_m.add(Dropout(dropout_rate))
     model_m.add(Dense(n_outputs, activation='softmax'))
     #print(model_m.summary())
-    model_m.compile(loss='sparse_categorical_crossentropy',
+    if(BINARY): loss = 'binary_crossentropy'
+    else: loss = 'categorical_crossentropy'
+    model_m.compile(loss=loss,
                     optimizer='adam', metrics=['accuracy'])
 
-    epochs = 50
+    epochs = 50 # 50
     #TODO: Might consider batch and CV, after part sepera
 
-    model_m.fit(X_train, y_train, epochs=epochs, verbose=1)
-    evaluate_nn_summary(model_m, X_test, y_test, batch_size=None)
+    model_m.fit(X_train, y_train, epochs=epochs, verbose=0, validation_split=TEST_SIZE)
+    evaluate_nn_summary(model_m, X_test, y_test, disp_labels)
     return model_m
 
 #==================================================================================
@@ -148,3 +152,4 @@ with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
 
 mlModels(data, labels)
 nn(data, labels)
+print(SEED)
