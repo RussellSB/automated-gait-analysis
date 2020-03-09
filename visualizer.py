@@ -338,22 +338,22 @@ def plot_avg_gcLR_all(gcFile):
     hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
 
     plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-    #plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
-    #plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-    #plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
+    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
+    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
 
-    plot_gcLR(gc['knee_FlexExt_gc'], 'Knee Flexion/Extension', (-20, 80))
-    plot_gcLR(gc['hip_FlexExt_gc'], 'Hip Flexion/Extension', (-20, 60))
-    plot_gcLR(gc['knee_AbdAdd_gc'], 'Knee Abduction/Adduction', (-20, 20))
-    plot_gcLR(gc['hip_AbdAdd_gc'], 'Knee Flexion/Extension', (-20, 80))
+    #plot_gcLR(gc['knee_FlexExt_gc'], 'Knee Flexion/Extension', (-20, 80))
+    #plot_gcLR(gc['hip_FlexExt_gc'], 'Hip Flexion/Extension', (-20, 60))
+    #plot_gcLR(gc['knee_AbdAdd_gc'], 'Knee Abduction/Adduction', (-20, 20))
+    #plot_gcLR(gc['hip_AbdAdd_gc'], 'Knee Flexion/Extension', (-20, 80))
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part12\\'
-poseFile = path + 'Part12_pose.json'
-anglesFile = path + 'Part12_angles.json'
-gcFile = path + 'Part12_gc.json'
+path = '..\\Part09\\'
+poseFile = path + 'Part09_pose.json'
+anglesFile = path + 'Part09_angles.json'
+gcFile = path + 'Part09_gc.json'
 plot_avg_gcLR_all(gcFile)
 
 i = 1

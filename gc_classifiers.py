@@ -24,11 +24,13 @@ from sklearn.preprocessing import LabelEncoder
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'age'
-BINARY = False
+LABEL = 'gender'
+BINARY = True
+SPLIT_BY_ID = True
 TEST_SIZE = 0.2
+
 SEED = random.randint(1, 1000) # 363, 161 - a victory
-DISP_LABELS = []
+
 
 #==================================================================================
 #                                   Methods
@@ -93,31 +95,101 @@ def flattenData(data):
     X = np.array(X)
     return X
 
-def mlModels(data, labels):
-    X = flattenData(data)
-    y = np.array(labels)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=SEED)
+def splitById(X, y, labels_id):
+    id_count = len(np.unique(labels_id))
+    test_size = int(TEST_SIZE * id_count)
+
+    test_ids = []
+    random.seed(SEED)
+
+    # Ensures that participants in test set are different from training
+    # and that the test set has a variety - and doesn't always have the same
+    # type of target
+    for i in range(0, test_size):
+        while True:
+            random_id = random.randint(1, id_count-1)
+            if(i > 0):
+                id_prev = test_ids[-1]
+                for j in range(0, len(X)):
+                    if(labels_id[j] == id_prev):
+                        label_prev = y[j]
+                        break
+                for j in range(0, len(X)):
+                    if(labels_id[j] == random_id):
+                        label_curr = y[j]
+                        break
+
+                print(random_id, label_curr, test_ids[-1], label_prev)
+            if(i == 0 or random_id != test_ids[-1] and label_curr != label_prev):
+                test_ids.append(random_id)
+                break
+
+    X_train, y_train, X_test, y_test = [], [], [], []
+    for i in range(0, len(X)):
+        print(y[i], labels_id[i])
+
+        test = False
+        for x in test_ids:
+            if(labels_id[i] == x):
+                test = True
+                break
+
+        if(test):
+            X_test.append(X[i])
+            y_test.append(y[i])
+        else:
+            X_train.append(X[i])
+            y_train.append(y[i])
+
+    train_set = list(zip(X_train, y_train))
+    random.shuffle(train_set)
+    X_train, y_train = zip(*train_set)
+
+    test_set = list(zip(X_test, y_test))
+    random.shuffle(test_set)
+    X_test, y_test = zip(*test_set)
+
+    return (X_train, X_test, y_train, y_test)
+
+def mlModels(data_train_test):
+    X_train = flattenData(data_train_test[0])
+    X_test = flattenData(data_train_test[1])
+    y_train = np.array(data_train_test[2])
+    y_test = np.array(data_train_test[3])
+
+    #X_train, X_test, y_train, y_test = splitById(X, y, labels_id)
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=SEED)
 
     return lr(X_train, X_test, y_train, y_test), svm(X_train, X_test, y_train, y_test)
 
-def nn(data, labels):
-    X = np.array([np.array(x).transpose() for x in data])  # (samples, time-steps, features)
+def nn(data_train_test):
+    X_train = data_train_test[0]
+    X_test = data_train_test[1]
+    y_train = data_train_test[2]
+    y_test = data_train_test[3]
 
-    # y = np.array([y-1 for y in labels])
-    disp_labels = sorted(list(dict.fromkeys(labels).keys()))
+    # Pre-process to (samples, time-steps, features)
+    X_train = np.array([np.array(x).transpose() for x in X_train])
+    X_test = np.array([np.array(x).transpose() for x in X_test])
+
+    y = [*y_train, *y_test]
     label_encoder = LabelEncoder()
-    y = label_encoder.fit_transform(labels)
+    disp_labels = sorted(list(dict.fromkeys(y).keys()))
+    y_test = label_encoder.fit_transform(y_test)
+    y_train = label_encoder.fit_transform(y_train)
+    y = [*y_train, *y_test]
     n_outputs = len(np.unique(y))
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
     y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
+
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
+    #y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
 
     filter1 = 101
     filter2 = 162
     kernel = 10
     dropout_rate = 0.5
 
-    n_timesteps, n_features = X.shape[1], X.shape[2]
+    n_timesteps, n_features = X_train.shape[1], X_train.shape[2]
 
     # https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
     model_m = Sequential()
@@ -138,7 +210,7 @@ def nn(data, labels):
     epochs = 50 # 50
     #TODO: Might consider batch and CV, after part sepera
 
-    model_m.fit(X_train, y_train, epochs=epochs, verbose=0, validation_split=TEST_SIZE)
+    model_m.fit(X_train, y_train, epochs=epochs, verbose=1, validation_split=TEST_SIZE)
     evaluate_nn_summary(model_m, X_test, y_test, disp_labels)
     return model_m
 
@@ -149,7 +221,14 @@ with open('..\\classifier_data\\data.pickle', 'rb') as f:
     data = pickle.load(f)
 with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
     labels = pickle.load(f)
+with open('..\\classifier_data\\labels_id.pickle', 'rb') as f:
+    labels_id = pickle.load(f)
 
-mlModels(data, labels)
-nn(data, labels)
-print(SEED)
+if(SPLIT_BY_ID):
+    data_train_test = splitById(data, labels, labels_id)
+else:
+    data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
+
+mlModels(data_train_test)
+nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matric
+print('SEED:', SEED)
