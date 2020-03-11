@@ -35,6 +35,25 @@ blue = "#72B6E9"
 #==================================================================================
 #                                   Methods
 #==================================================================================
+# Plots kinematics of left or right leg, used for viewing all gait cycles
+def plot_angles(angleList, title, yrange, isRed):
+    if(isRed): color = red
+    else: color = blue
+    xmax = len(angleList)
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel('Time (%)')
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.plot(angleList, color=color)
+    plt.show()
+    plt.close()
+
+# Plots each angle list gait cycle in list
+def plot_gc(gc, title, yrange, isRed):
+    for angleList in gc:
+        plot_angles(angleList, title, yrange, isRed)
+
 # Filling in gaps, to cater for low confidence in estimation
 def gapfill(angleList):
     df = pd.DataFrame({'ang': angleList})
@@ -128,7 +147,21 @@ def gaitCycle_filter(angle_list, stepOnFrames):
         if(start >= 0):
             subset = angle_list[start:end]
             gc.append(subset)
-    return gc
+    #plot_gc(gc, 'Test', (-30, 80), True)
+
+    # Filters out relatively short gait cycles
+    gc_len = [len(x) for x in gc]
+    len_threshold = int(0.6 * max(gc_len))
+
+    gc_filtered = []
+    for i in range(0, len(gc)):
+        if(gc_len[i] > len_threshold):
+            gc_filtered.append(gc)
+
+    gc_len_T = [len(x) for x in gc_filtered]
+    print(len_threshold, gc_len, gc_len_T)
+    plot_gc(gc_filtered, 'Test', (-30, 80), True)
+    return gc_filtered
 
 # Returns right and left gait cycles of angle list
 def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
@@ -137,7 +170,6 @@ def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
     gc = [gc_L, gc_R]
     return gc
 
-# TODO: Improve catering for None
 # Normalizes the xrange to a sample of N data points
 def resample_gcLR(gcLR, N):
     gcL = gcLR[0]
@@ -145,7 +177,6 @@ def resample_gcLR(gcLR, N):
     gcLR_resampled = [[], []]
 
     for angleList in gcL:
-
         for i in range(0,len(angleList)):
             if(angleList[i] == None):
                 angleList[i] = 0
@@ -279,26 +310,10 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part10\\'
-poseFile = path + 'Part10_pose.json'
-anglesFile = path + 'Part10_angles.json'
-writeFile = path + 'Part10_gc.json'
-start_time = time.time()
-kinematics_process(poseFile, anglesFile, writeFile)
-print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
-
-path = '..\\Part11\\'
-poseFile = path + 'Part11_pose.json'
-anglesFile = path + 'Part11_angles.json'
-writeFile = path + 'Part11_gc.json'
-start_time = time.time()
-kinematics_process(poseFile, anglesFile, writeFile)
-print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
-
-path = '..\\Part12\\'
-poseFile = path + 'Part12_pose.json'
-anglesFile = path + 'Part12_angles.json'
-writeFile = path + 'Part12_gc.json'
+path = '..\\Part06\\'
+poseFile = path + 'Part06_pose.json'
+anglesFile = path + 'Part06_angles.json'
+writeFile = path + 'Part06_gc.json'
 start_time = time.time()
 kinematics_process(poseFile, anglesFile, writeFile)
 print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
