@@ -1,7 +1,7 @@
 #==================================================================================
-#                               GC CLASSIFIERS
+#                               GC CLASSIFICATION
 #----------------------------------------------------------------------------------
-#               Input: Pre-processed gait cycles, Output: Classification
+#           Input: Pre-processed gait cycles, Output: LR, SVM & CNN Summaries
 #               Classifies according to testing and training data
 #==================================================================================
 #                                   Imports
@@ -24,13 +24,11 @@ from sklearn.preprocessing import LabelEncoder
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'gender'
-BINARY = True
-SPLIT_BY_ID = True
-TEST_SIZE = 0.2
-
-SEED = random.randint(1, 1000) # 363, 161 - a victory
-
+LABEL = 'id'
+BINARY = False
+SPLIT_BY_ID = False
+TEST_SIZE = 0.5
+SEED = random.randint(1, 1000)
 
 #==================================================================================
 #                                   Methods
@@ -230,5 +228,5 @@ else:
     data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
 
 mlModels(data_train_test)
-nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matric
+#nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matrix
 print('SEED:', SEED)

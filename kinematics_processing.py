@@ -35,25 +35,6 @@ blue = "#72B6E9"
 #==================================================================================
 #                                   Methods
 #==================================================================================
-# Plots kinematics of left or right leg, used for viewing all gait cycles
-def plot_angles(angleList, title, yrange, isRed):
-    if(isRed): color = red
-    else: color = blue
-    xmax = len(angleList)
-    fig, ax = plt.subplots()
-    ax.set_title(title)
-    ax.set_xlabel('Time (%)')
-    ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
-    ax.plot(angleList, color=color)
-    plt.show()
-    plt.close()
-
-# Plots each angle list gait cycle in list
-def plot_gc(gc, title, yrange, isRed):
-    for angleList in gc:
-        plot_angles(angleList, title, yrange, isRed)
-
 # Filling in gaps, to cater for low confidence in estimation
 def gapfill(angleList):
     df = pd.DataFrame({'ang': angleList})
@@ -147,21 +128,7 @@ def gaitCycle_filter(angle_list, stepOnFrames):
         if(start >= 0):
             subset = angle_list[start:end]
             gc.append(subset)
-    #plot_gc(gc, 'Test', (-30, 80), True)
-
-    # Filters out relatively short gait cycles
-    gc_len = [len(x) for x in gc]
-    len_threshold = int(0.6 * max(gc_len))
-
-    gc_filtered = []
-    for i in range(0, len(gc)):
-        if(gc_len[i] > len_threshold):
-            gc_filtered.append(gc)
-
-    gc_len_T = [len(x) for x in gc_filtered]
-    print(len_threshold, gc_len, gc_len_T)
-    plot_gc(gc_filtered, 'Test', (-30, 80), True)
-    return gc_filtered
+    return gc
 
 # Returns right and left gait cycles of angle list
 def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
@@ -170,6 +137,7 @@ def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
     gc = [gc_L, gc_R]
     return gc
 
+# TODO: Cater for missing gaps... (Even at beginning... ugghh)
 # Normalizes the xrange to a sample of N data points
 def resample_gcLR(gcLR, N):
     gcL = gcLR[0]
@@ -266,6 +234,9 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
         knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
         hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
+
+        # TODO GAIT CYCLE OUTLIER REMOVAL METHOD
+        print('here')
 
         # Resampling to 100 (100 and 0 inclusive)
         knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
