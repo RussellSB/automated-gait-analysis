@@ -32,6 +32,7 @@ ptID = {
 
 red = "#FF4A7E"
 blue = "#72B6E9"
+
 #==================================================================================
 #                                   Methods
 #==================================================================================
@@ -137,6 +138,36 @@ def gcLR(angleList, stepOnFrames_L, stepOnFrames_R):
     gc = [gc_L, gc_R]
     return gc
 
+# Removes short gait cycles relative to the longest gait cycle
+def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
+    len_gc_L = [len(x) for x in gcLR1[0]]
+    len_gc_R = [len(x) for x in gcLR1[1]]
+    
+    gc_max_L = max(len_gc_L)
+    gc_max_R = max(len_gc_R)
+    
+    # Remove short gait cycles from left
+    threshold_L = 0.6 * gc_max_L
+    for i in range(0, len(gcLR1[0])):
+        len_gc = len(gcLR1[0][i])
+        if(len_gc <= threshold_L):
+            del gcLR1[0][i]
+            del gcLR2[0][i]
+            del gcLR3[0][i]
+            del gcLR4[0][i]
+            
+     # Remove short gait cycles from right
+    threshold_R = 0.6 * gc_max_R
+    for i in range(0, len(gcLR1[1])):
+        len_gc = len(gcLR1[1][i])
+        if(len_gc <= threshold_R):
+            del gcLR1[1][i]
+            del gcLR2[1][i]
+            del gcLR3[1][i]
+            del gcLR4[1][i]
+            
+    return gcLR1, gcLR2, gcLR3, gcLR4
+
 # TODO: Cater for missing gaps... (Even at beginning... ugghh)
 # Normalizes the xrange to a sample of N data points
 def resample_gcLR(gcLR, N):
@@ -235,8 +266,9 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
         hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 
-        # TODO GAIT CYCLE OUTLIER REMOVAL METHOD
-        print('here')
+        # Removing gait cycles that are relatively too short to be correct
+        knee_FlexExt2, hip_FlexExt2, knee_AbdAdd2, hip_AbdAdd2 = gcLR_removeShort(knee_FlexExt2, hip_FlexExt2, 
+                                                                                  knee_AbdAdd2, hip_AbdAdd2)
 
         # Resampling to 100 (100 and 0 inclusive)
         knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
