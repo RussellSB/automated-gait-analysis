@@ -143,28 +143,17 @@ def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
     len_gc_L = [len(x) for x in gcLR1[0]]
     len_gc_R = [len(x) for x in gcLR1[1]]
     
-    gc_max_L = max(len_gc_L)
-    gc_max_R = max(len_gc_R)
+    gc_max_LR = [0.6 * max(len_gc_L), 0.6 * max(len_gc_R)]
     
-    # Remove short gait cycles from left
-    threshold_L = 0.6 * gc_max_L
-    for i in range(0, len(gcLR1[0])):
-        len_gc = len(gcLR1[0][i])
-        if(len_gc <= threshold_L):
-            del gcLR1[0][i]
-            del gcLR2[0][i]
-            del gcLR3[0][i]
-            del gcLR4[0][i]
-            
-     # Remove short gait cycles from right
-    threshold_R = 0.6 * gc_max_R
-    for i in range(0, len(gcLR1[1])):
-        len_gc = len(gcLR1[1][i])
-        if(len_gc <= threshold_R):
-            del gcLR1[1][i]
-            del gcLR2[1][i]
-            del gcLR3[1][i]
-            del gcLR4[1][i]
+    # Removes from left then right
+    for h in range(0, 2):
+        for i in range(0, len(gcLR1[h])):
+        len_gc = len(gcLR1[h][i])
+        if(len_gc <= gc_max_LR[h]):
+            del gcLR1[h][i]
+            del gcLR2[h][i]
+            del gcLR3[h][i]
+            del gcLR4[h][i]
             
     return gcLR1, gcLR2, gcLR3, gcLR4
 
