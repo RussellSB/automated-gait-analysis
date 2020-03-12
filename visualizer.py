@@ -337,7 +337,7 @@ def plot_avg_gcLR_all(gcFile):
     knee_AbdAdd_avg = gc['knee_AbdAdd_avg']
     hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
 
-    #plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
+    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
     #plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
     #plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
     #plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
@@ -350,13 +350,13 @@ def plot_avg_gcLR_all(gcFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part06\\'
-poseFile = path + 'Part06_pose.json'
-anglesFile = path + 'Part06_angles.json'
-gcFile = path + 'Part06_gc.json'
+i = '12'
+path = '..\\Part' + str(i) + '\\'
+poseFile = path + 'Part' + str(i) + '_pose.json'
+anglesFile = path + 'Part' + str(i) + '_angles.json'
+gcFile = path + 'Part' + str(i) + '_gc.json'
 plot_avg_gcLR_all(gcFile)
 
-i = 1
 #gif_pose(poseFile, i, path)
 #gif_flexext(poseFile, anglesFile, i, path)
 #gif_abdadd(poseFile, anglesFile, i, path)

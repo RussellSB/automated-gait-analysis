@@ -185,23 +185,10 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part10\\'
-readFile = path + 'Part10_pose.json'
-writeFile = path + 'Part10_angles.json'
-start_time = time.time()
-kinematics_extract(readFile, writeFile)
-print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
-
-path = '..\\Part11\\'
-readFile = path + 'Part11_pose.json'
-writeFile = path + 'Part11_angles.json'
-start_time = time.time()
-kinematics_extract(readFile, writeFile)
-print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
-
-path = '..\\Part12\\'
-readFile = path + 'Part12_pose.json'
-writeFile = path + 'Part12_angles.json'
-start_time = time.time()
-kinematics_extract(readFile, writeFile)
-print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+for i in range(13, 18):
+    path = '..\\Part' + str(i) + '\\'
+    readFile = path + 'Part' + str(i) + '_pose.json'
+    writeFile = path + 'Part' + str(i) + '_angles.json'
+    start_time = time.time()
+    kinematics_extract(readFile, writeFile)
+    print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')

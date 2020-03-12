@@ -147,17 +147,24 @@ def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
     
     # Removes from left then right
     for h in range(0, 2):
-        for i in range(0, len(gcLR1[h])):
-        len_gc = len(gcLR1[h][i])
-        if(len_gc <= gc_max_LR[h]):
-            del gcLR1[h][i]
-            del gcLR2[h][i]
-            del gcLR3[h][i]
-            del gcLR4[h][i]
+        i = 0
+        limit = len(gcLR1[h])
+        while True:
+            len_gc = len(gcLR1[h][i])
+            if(len_gc <= gc_max_LR[h]):
+                del gcLR1[h][i]
+                del gcLR2[h][i]
+                del gcLR3[h][i]
+                del gcLR4[h][i]
+                i -= 1
+                limit -= 1
+
+            i += 1
+            if(i >= limit): break
+
             
     return gcLR1, gcLR2, gcLR3, gcLR4
 
-# TODO: Cater for missing gaps... (Even at beginning... ugghh)
 # Normalizes the xrange to a sample of N data points
 def resample_gcLR(gcLR, N):
     gcL = gcLR[0]
@@ -256,8 +263,8 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         hip_AbdAdd2 = gcLR(hip_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
 
         # Removing gait cycles that are relatively too short to be correct
-        knee_FlexExt2, hip_FlexExt2, knee_AbdAdd2, hip_AbdAdd2 = gcLR_removeShort(knee_FlexExt2, hip_FlexExt2, 
-                                                                                  knee_AbdAdd2, hip_AbdAdd2)
+        knee_FlexExt2, hip_FlexExt2, knee_AbdAdd2, hip_AbdAdd2 = gcLR_removeShort(knee_FlexExt2, hip_FlexExt2,
+                                                                                 knee_AbdAdd2, hip_AbdAdd2)
 
         # Resampling to 100 (100 and 0 inclusive)
         knee_FlexExt3 = resample_gcLR(knee_FlexExt2, 101)
@@ -302,10 +309,12 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-path = '..\\Part06\\'
-poseFile = path + 'Part06_pose.json'
-anglesFile = path + 'Part06_angles.json'
-writeFile = path + 'Part06_gc.json'
-start_time = time.time()
-kinematics_process(poseFile, anglesFile, writeFile)
-print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+for i in range(12, 13):
+    if(len(str(i)) < 2): i = '0' + str(i)
+    path = '..\\Part' + str(i) + '\\'
+    poseFile = path + 'Part' + str(i) + '_pose.json'
+    anglesFile = path + 'Part' + str(i) + '_angles.json'
+    writeFile = path + 'Part' + str(i) + '_gc.json'
+    start_time = time.time()
+    kinematics_process(poseFile, anglesFile, writeFile)
+    print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
