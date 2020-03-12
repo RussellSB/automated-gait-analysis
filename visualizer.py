@@ -355,8 +355,9 @@ path = '..\\Part' + str(i) + '\\'
 poseFile = path + 'Part' + str(i) + '_pose.json'
 anglesFile = path + 'Part' + str(i) + '_angles.json'
 gcFile = path + 'Part' + str(i) + '_gc.json'
-plot_avg_gcLR_all(gcFile)
+#plot_avg_gcLR_all(gcFile)
 
-#gif_pose(poseFile, i, path)
-#gif_flexext(poseFile, anglesFile, i, path)
-#gif_abdadd(poseFile, anglesFile, i, path)
+i = 0
+gif_pose(poseFile, i, path)
+gif_flexext(poseFile, anglesFile, i, path)
+gif_abdadd(poseFile, anglesFile, i, path)
