@@ -350,14 +350,24 @@ def plot_avg_gcLR_all(gcFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
+
+#while True:
+#    i = input('Enter participant code')
+
 i = '12'
 path = '..\\Part' + str(i) + '\\'
 poseFile = path + 'Part' + str(i) + '_pose.json'
 anglesFile = path + 'Part' + str(i) + '_angles.json'
 gcFile = path + 'Part' + str(i) + '_gc.json'
-#plot_avg_gcLR_all(gcFile)
+plot_avg_gcLR_all(gcFile)
 
-i = 0
-gif_pose(poseFile, i, path)
-gif_flexext(poseFile, anglesFile, i, path)
-gif_abdadd(poseFile, anglesFile, i, path)
+#with open(anglesFile, 'r') as f:
+#    jsonAngles = json.load(f)
+#i = 1
+#angleList = jsonAngles[i]['knee_FlexExt'][0]
+#plot_angles(angleList, 'Knee Flexion/Extension', (-20, 80), True)
+
+#i = 1
+#gif_pose(poseFile, i, path)
+#gif_flexext(poseFile, anglesFile, i, path)
+#gif_abdadd(poseFile, anglesFile, i, path)

@@ -75,19 +75,6 @@ def calc_hip_angle(hip, knee, rightNeg, isFlex):
     if(isFlex): angle = angle * 4/3 # A heuristic for catering for forward/backward pelvic tilt
     return angle.tolist()
 
-# TODO: Remove: noticing redundancy, smoothing deals with outliers
-# If angle to be fed in is an outlier, simply return the same angle value as before
-def outlier_check(angle_list, new_angle):
-    if(len(angle_list) == 0): return new_angle
-    if(new_angle == None or angle_list[-1] == None): return new_angle
-
-    angle_before = angle_list[-1]
-    diff = 30
-    if(new_angle > angle_before + diff or new_angle < angle_before - diff):
-        return angle_before
-    else:
-        return new_angle
-
 # Traversing through pose to compute kinematics
 def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
@@ -104,10 +91,8 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
         hip_L = pose[ptID['hip_L']]
 
         angle = calc_knee_angle(hip_L, knee_L, ankle_L, rightNeg)
-        angle = outlier_check(knee_ang_L, angle)
         knee_ang_L.append(angle)
         angle = calc_hip_angle(hip_L, knee_L, rightNeg, isFlex)
-        angle = outlier_check(hip_ang_L, angle)
         hip_ang_L.append(angle)
 
         #Right
@@ -117,12 +102,12 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
 
         if(invert): angle = calc_knee_angle(hip_R, knee_R, ankle_R, not rightNeg)
         else: angle = calc_knee_angle(hip_R, knee_R, ankle_R, rightNeg)
-        angle = outlier_check(knee_ang_R, angle)
+        #angle = outlier_check(knee_ang_R, angle)
         knee_ang_R.append(angle)
 
         if(invert): angle = calc_hip_angle(hip_R, knee_R, not rightNeg, isFlex)
         else: angle = calc_hip_angle(hip_R, knee_R, rightNeg, isFlex)
-        angle = outlier_check(hip_ang_R, angle)
+        #angle = outlier_check(hip_ang_R, angle)
         hip_ang_R.append(angle)
 
         if(count == limit): break
@@ -185,7 +170,8 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(13, 18):
+for i in range(1, 18):
+    if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     readFile = path + 'Part' + str(i) + '_pose.json'
     writeFile = path + 'Part' + str(i) + '_angles.json'

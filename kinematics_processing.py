@@ -166,7 +166,6 @@ def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
     return gcLR1, gcLR2, gcLR3, gcLR4
 
 # Normalizes the xrange to a sample of N data points
-#TODO add back
 def resample_gcLR(gcLR, N):
     gcL = gcLR[0]
     gcR = gcLR[1]
@@ -176,35 +175,34 @@ def resample_gcLR(gcLR, N):
         for i in range(0,len(angleList)):
             if(angleList[i] == None):
                 angleList[i] = 0
-        angleListL = angleList #signal.resample(angleList, N)
-        gcLR_resampled[0].append(angleListL) #angleListL.tolist()
+        angleListL = signal.resample(angleList, N)
+        gcLR_resampled[0].append(angleListL.tolist())
 
     for angleList in gcR:
         for i in range(0,len(angleList)):
             if(angleList[i] == None):
                 angleList[i] = 0
-        angleListR = angleList #signal.resample(angleList, N)
-        gcLR_resampled[1].append(angleListR) #angleListR.tolist()
+        angleListR = signal.resample(angleList, N)
+        gcLR_resampled[1].append(angleListR.tolist())
 
     return gcLR_resampled
 
 # Returns average of left and right gait cycles respectively
-# TODO: Revert
 def avg_gcLR(gcLR):
     gcL = np.array(gcLR[0]) # list of left gait cycles
     gcR = np.array(gcLR[1]) # list of right gait cycles
 
-    gcL_avg = gcL[0] #np.mean(gcL, axis=0)
-    gcL_std = gcL[0] #np.std(gcL, axis=0)
+    gcL_avg = np.mean(gcL, axis=0)
+    gcL_std = np.std(gcL, axis=0)
 
-    gcR_avg =  gcR[0] #np.mean(gcR, axis=0)
-    gcR_std = gcR[0] #np.std(gcR, axis=0)
+    gcR_avg = np.mean(gcR, axis=0)
+    gcR_std = np.std(gcR, axis=0)
 
     avg_gcLR = {
-        'gcL_avg' : gcL_avg, #.tolist()
-        'gcL_std' : gcL_std, #.tolist()
-        'gcR_avg': gcR_avg, #.tolist()
-        'gcR_std': gcR_std, #.tolist()
+        'gcL_avg' : gcL_avg.tolist(),
+        'gcL_std' : gcL_std.tolist(),
+        'gcR_avg': gcR_avg.tolist(),
+        'gcR_std': gcR_std.tolist(),
         'gcL_count' : len(gcL),
         'gcR_count' : len(gcR)
     }
@@ -311,7 +309,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(12, 13):
+for i in range(1, 18):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'

@@ -27,8 +27,11 @@ from sklearn.preprocessing import LabelEncoder
 LABEL = 'id'
 BINARY = False
 SPLIT_BY_ID = False
-TEST_SIZE = 0.5
+TEST_SIZE = 0.2
 SEED = random.randint(1, 1000)
+
+# NOTES
+# Good seed for id: 495, test size 0.2
 
 #==================================================================================
 #                                   Methods
