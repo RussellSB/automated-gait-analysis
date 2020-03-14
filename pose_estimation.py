@@ -153,7 +153,7 @@ def estimate_poses(path, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(13, 18):
+for i in range(18, 22):
     path = '..\\Part' + str(i) + '\\'
     writeFile = path + 'Part' + str(i) + '_pose.json'
     start_time = time.time()

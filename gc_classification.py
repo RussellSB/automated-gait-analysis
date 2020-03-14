@@ -24,14 +24,15 @@ from sklearn.preprocessing import LabelEncoder
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'id'
-BINARY = False
-SPLIT_BY_ID = False
+LABEL = 'gender'
+BINARY = True
+SPLIT_BY_ID = True # TODO: Abnormality split by ID
 TEST_SIZE = 0.2
-SEED = random.randint(1, 1000)
+SEED = 238 #random.randint(1, 1000)
 
-# NOTES
-# Good seed for id: 495, test size 0.2
+# NOTEWORTHY SEEDS
+# LR, SVM, id: 495, test size 0.2
+# LR, SVM, gender: 238
 
 #==================================================================================
 #                                   Methods
@@ -188,7 +189,8 @@ def nn(data_train_test):
     filter1 = 101
     filter2 = 162
     kernel = 10
-    dropout_rate = 0.5
+    dropout_rate = 0.3
+    epochs = 30
 
     n_timesteps, n_features = X_train.shape[1], X_train.shape[2]
 
@@ -208,7 +210,7 @@ def nn(data_train_test):
     model_m.compile(loss=loss,
                     optimizer='adam', metrics=['accuracy'])
 
-    epochs = 50 # 50
+
     #TODO: Might consider batch and CV, after part sepera
 
     model_m.fit(X_train, y_train, epochs=epochs, verbose=1, validation_split=TEST_SIZE)
@@ -231,5 +233,5 @@ else:
     data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
 
 mlModels(data_train_test)
-#nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matrix
+nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matrix
 print('SEED:', SEED)
