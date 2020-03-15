@@ -24,15 +24,23 @@ from sklearn.preprocessing import LabelEncoder
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'gender'
+LABEL = 'age'
 BINARY = True
-SPLIT_BY_ID = True # TODO: Abnormality split by ID
+SPLIT_BY_ID = True
 TEST_SIZE = 0.2
-SEED = 238 #random.randint(1, 1000)
+SEED = random.randint(1, 1000)
 
 # NOTEWORTHY SEEDS
-# LR, SVM, id: 495, test size 0.2
-# LR, SVM, gender: 238
+### V. GOOD
+# id: 495 (81%, 81%, 72%)
+# gender: 238 (91%, 94%, 66%)
+# abnormality: 168 (97%, 97%, 100%)
+# abnormality: 899 (70%, 70%, 74% - most of whats in test set is normal)
+
+### V. BAD
+# abnormality: 854, 791, 267, 617... etc (CNN classifies everything as normal -
+#                                               except SVM and LR classify at 70%)
+# age: all.... (around 30%)
 
 #==================================================================================
 #                                   Methods
@@ -120,16 +128,12 @@ def splitById(X, y, labels_id):
                     if(labels_id[j] == random_id):
                         label_curr = y[j]
                         break
-
-                print(random_id, label_curr, test_ids[-1], label_prev)
             if(i == 0 or random_id != test_ids[-1] and label_curr != label_prev):
                 test_ids.append(random_id)
                 break
 
     X_train, y_train, X_test, y_test = [], [], [], []
     for i in range(0, len(X)):
-        print(y[i], labels_id[i])
-
         test = False
         for x in test_ids:
             if(labels_id[i] == x):
@@ -142,6 +146,13 @@ def splitById(X, y, labels_id):
         else:
             X_train.append(X[i])
             y_train.append(y[i])
+
+    print('==========TRAINING==========')
+    for label in set(y):
+        print(str(label) + ':', y_train.count(label))
+    print('==========TESTING==========')
+    for label in set(y):
+        print(str(label) + ':', y_test.count(label))
 
     train_set = list(zip(X_train, y_train))
     random.shuffle(train_set)
@@ -210,21 +221,23 @@ def nn(data_train_test):
     model_m.compile(loss=loss,
                     optimizer='adam', metrics=['accuracy'])
 
-
     #TODO: Might consider batch and CV, after part sepera
 
-    model_m.fit(X_train, y_train, epochs=epochs, verbose=1, validation_split=TEST_SIZE)
+    model_m.fit(X_train, y_train, epochs=epochs, verbose=0) # validation_split=TEST_SIZE
     evaluate_nn_summary(model_m, X_test, y_test, disp_labels)
     return model_m
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-with open('..\\classifier_data\\data.pickle', 'rb') as f:
+DATA = 'data' if LABEL != 'abnormality' else 'data_na'
+ID = 'labels_id' if LABEL != 'abnormality' else 'labels_id_na'
+
+with open('..\\classifier_data\\' + DATA + '.pickle', 'rb') as f:
     data = pickle.load(f)
 with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
     labels = pickle.load(f)
-with open('..\\classifier_data\\labels_id.pickle', 'rb') as f:
+with open('..\\classifier_data\\' + ID + '.pickle', 'rb') as f:
     labels_id = pickle.load(f)
 
 if(SPLIT_BY_ID):
@@ -233,5 +246,5 @@ else:
     data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
 
 mlModels(data_train_test)
-nn(data_train_test) # TODO: Fix CNN bug: inconsistencies in confusion matrix
+nn(data_train_test)
 print('SEED:', SEED)

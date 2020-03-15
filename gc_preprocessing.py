@@ -17,14 +17,18 @@ import math
 #==================================================================================
 #                                   Constants
 #==================================================================================
-# Normal/Abnormal, Age, Gender
+# Normality, Age, Gender
 partInfo = {
+    # Normal participants
     '1':('N', 23, 'M'), '2':('N', 20, 'M'), '3':('N', 20, 'M'),
     '4':('N', 20, 'F'), '5':('N', 22, 'M'), '6':('N', 19, 'M'),
     '7':('N', 20, 'F'), '8':('N', 20, 'M'), '9':('N', 22, 'F'),
     '10':('N', 22, 'F'), '11':('N', 19, 'F'), '12':('N', 20, 'M'),
     '13':('N', 20, 'F'), '14':('N', 20, 'M'), '15':('N', 78, 'F'),
-    '16':('N', 80, 'M'), '17':('N', 20, 'F')
+    '16':('N', 80, 'M'), '17':('N', 20, 'F'),
+    # Abnormal participants (simulations from Part14)
+    '18':('A', 20, 'M'), '19':('A', 20, 'M'), '20':('A', 20, 'M'),
+    '21':('A', 20, 'M')
 }
 
 #==================================================================================
@@ -107,12 +111,15 @@ def get_gcart(n):
 #==================================================================================
 data = []
 labels_id = []
-labels_na = []
 labels_age = []
 labels_gen = []
 
+data_na = []
+labels_na = []
+labels_id_na = []
+
 # Prepares gait data collected from the lab
-for i in range(1, 18):
+for i in range(1, 22):
     id = str(i)
     id = '0' + id if len(id) < 2 else i
     part = 'Part' + str(id)
@@ -134,18 +141,27 @@ for i in range(1, 18):
 
         age = partInfo[str(i)][1]
 
-        data.append(gc)
-        labels_id.append(i)
-        labels_na.append(na)
-        labels_age.append(age)
-        labels_gen.append(gen)
+        # Separate abnormal/normal set from normal set
+        if(na=='Abnormal'):
+            data_na.append(gc)
+            labels_na.append(na)
+            labels_id_na.append(i)
+        else:
+            data.append(gc)
+            labels_id.append(i)
+            labels_age.append(age)
+            labels_gen.append(gen)
+
+            data_na.append(gc)
+            labels_na.append(na)
+            labels_id_na.append(i)
 
 # Prepares artificial gait data simulating abnormalities
-kinematics_artificial = get_gcart(int(len(data)/2))
-data_na = [x for x in data]
-for gc in kinematics_artificial:
-    data_na.append(gc)
-    labels_na.append('Abnormal')
+#kinematics_artificial = get_gcart(int(len(data)/2))
+#data_na = [x for x in data]
+#for gc in kinematics_artificial:
+#    data_na.append(gc)
+#    labels_na.append('Abnormal')
 
 with open('..\\classifier_data\\data.pickle', 'wb') as f:
     pickle.dump(data, f)
@@ -158,5 +174,7 @@ with open('..\\classifier_data\\labels_gender.pickle', 'wb') as f:
 
 with open('..\\classifier_data\\data_na.pickle', 'wb') as f:
     pickle.dump(data_na, f)
+with open('..\\classifier_data\\labels_id_na.pickle', 'wb') as f:
+    pickle.dump(labels_id_na, f)
 with open('..\\classifier_data\\labels_abnormality.pickle', 'wb') as f:
     pickle.dump(labels_na, f)

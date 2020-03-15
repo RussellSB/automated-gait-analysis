@@ -352,12 +352,13 @@ def plot_avg_gcLR_all(gcFile):
 #==================================================================================
 
 while True:
-    i = input('Enter participant code')
+    i = 21 #input('Enter participant code')
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
     anglesFile = path + 'Part' + str(i) + '_angles.json'
     gcFile = path + 'Part' + str(i) + '_gc.json'
     plot_avg_gcLR_all(gcFile)
+    input()
 
 #with open(anglesFile, 'r') as f:
 #    jsonAngles = json.load(f)
