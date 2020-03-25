@@ -24,7 +24,7 @@ import os
 
 #==================================================================================
 #                                   AI Detectors
-#                        Object detector; YOLO via GPU.
+#                        Person detector; YOLO via GPU.
 #                Pose Estimator; AlphaPose via CPU (no GPU support).
 #==================================================================================
 ctx = mx.gpu(0)
@@ -76,8 +76,8 @@ def video_to_listPose(vid):
             break # If current frame doesn't exist, finished iterating through frames
         frame = mx.nd.array(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).astype('uint8') # mxnet readable
 
-        # Object detection
-        x, frame = gcv.data.transforms.presets.yolo.transform_test(frame)  # short=512, max_size=350
+        # Person detection
+        x, frame = gcv.data.transforms.presets.yolo.transform_test(frame)  # short=406, max_size=1024
         class_IDs, scores, bounding_boxs = detector(x.as_in_context(ctx))
 
         # Pose estimation

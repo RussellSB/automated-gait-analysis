@@ -309,7 +309,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(18, 22):
+for i in range(1, 22):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'

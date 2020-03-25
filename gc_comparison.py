@@ -132,9 +132,11 @@ def compare_visually(gc_PE, gc_PIG, code):
 #==================================================================================
 #                                   Main
 #==================================================================================
-filePE = '..\\Part01\\' + 'Part01_gc.json'
-filePIG = '..\\Part08\\' + 'Part08_gc.json' # For now, note he has weird knee abd/add
-
+i = '01'
+filePath = '..\\Part'+ i + '\\'
+filePE = filePath + 'Part' + i + '_gc.json'
+filePIG = filePath + 'Part' + i + '_gc_pig.json'
+#filePIG = '..\\Part08\\' + 'Part08_gc.json' # For now, note he has weird knee abd/add
 with open(filePE, 'r') as f:
     gc_PE = json.load(f)
 with open(filePIG, 'r') as f:
@@ -144,6 +146,6 @@ with open(filePIG, 'r') as f:
 compare_textually(gc_PE, gc_PIG, 'FlexExt')
 compare_textually(gc_PE, gc_PIG, 'AbdAdd')
 
-# Using SPM1D on the instances
+# Using SPM1D on the instances (PiG system in colour)
 compare_visually(gc_PE, gc_PIG, 'FlexExt')
 compare_visually(gc_PE, gc_PIG, 'AbdAdd')
