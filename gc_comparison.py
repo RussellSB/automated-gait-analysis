@@ -45,7 +45,7 @@ def compare_ks(samp1, samp2, title, isLeft):
 
     print(title+'\t'+LorR+'\t\t'+pval+'\t'+str(0.01)+'\t'+d+'\t'+cv+'\t'+str(isDifferent1)[0]+'\t'+str(isDifferent2)[0])
 
-# Compares textually for either flexion/extension or abduction/adduction with respect to average using spm1d
+# Compares textually for either flexion/extension or abduction/adduction with respect to average using kolmo
 def compare_textually(gc_PE, gc_PIG, code):
     print('===========================================================================')
     print('Title'+'\t\t\t'+'L/R'+'\t\t'+'p'+'\t\t'+'a'+'\t\t'+'D'+'\t\t'+'cv'+'\t\t'+'M1'+'\t'+'M2')
