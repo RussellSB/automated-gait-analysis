@@ -250,7 +250,7 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 2):
+for i in range(1, 22):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     readFile = path + 'Part' + str(i) + '_pose.json'

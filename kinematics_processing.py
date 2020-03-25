@@ -255,8 +255,8 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
         # Slicing into gait cycles
-        stepOnFrames_L = getStepOnFrames(dataS, 'L', 8, 0.8)
-        stepOnFrames_R = getStepOnFrames(dataS, 'R', 8, 0.8)
+        stepOnFrames_L = getStepOnFrames(dataS, 'L', 8, 0.8) # 8, 0.8
+        stepOnFrames_R = getStepOnFrames(dataS, 'R', 8, 0.8) # 8, 0.8
         knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
         hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
         knee_AbdAdd2 = gcLR(knee_AbdAdd1, stepOnFrames_L, stepOnFrames_R)
@@ -309,7 +309,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 2):
+for i in range(1, 22):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
