@@ -30,7 +30,7 @@ ptID = {
 #                                   Methods
 #==================================================================================
 # Calculates joint angle of knee
-def calc_knee_angle(hip, knee, ankle, rightNeg):
+def calc_knee_angle_S(hip, knee, ankle, rightNeg):
     if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
         return None  # returns this value as error code for no keypoint detection
 
@@ -48,12 +48,58 @@ def calc_knee_angle(hip, knee, ankle, rightNeg):
     angle = np.arccos(cosine_angle)
     angle = np.degrees(angle)
 
-    if(rightNeg and bc[0] < m_ba[0]): angle = - angle
+    if (rightNeg and bc[0] < m_ba[0]): angle = - angle
     if (not rightNeg and bc[0] > m_ba[0]): angle = - angle
+
+    return angle.tolist()
+
+# Calculates joint angle of knee
+def calc_knee_angle_F(hip, knee, ankle, rightNeg):
+    if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
+        return None  # returns this value as error code for no keypoint detection
+
+    # Identifying joint positions
+    a = np.array(hip)
+    b = np.array(knee)
+    c = np.array(ankle)
+
+    # Compute vectors from main joint
+    ba = a - b
+    m_ba = - ba
+    bc = c - b
+
+    cosine_angle = np.dot(m_ba, bc) / (np.linalg.norm(m_ba) * np.linalg.norm(bc))
+    angle = np.arccos(cosine_angle)
+    angle = np.degrees(angle)
+
+    if (rightNeg and bc[0] > m_ba[0]): angle = - angle
+    if (not rightNeg and bc[0] < m_ba[0]): angle = - angle
+
     return angle.tolist()
 
 # Calculates joint angle of hip
-def calc_hip_angle(hip, knee, rightNeg, isFlex):
+def calc_hip_angle_S(hip, knee, rightNeg):
+    if(hip == [-1,-1] or knee == [-1,-1]):
+        return None # returns this value as error code for no keypoint detection
+
+    # Identifying joint positions
+    a = np.array(hip) # Main joint
+    b = np.array(knee)
+
+    # Compute vectors from joints
+    ab = b - a
+    m_N = np.array([0,-1])
+
+    cosine_angle = np.dot(ab, m_N) / (np.linalg.norm(ab) * np.linalg.norm(m_N))
+    angle = np.arccos(cosine_angle)
+    angle = np.degrees(angle)
+
+    if (rightNeg and ab[0] > m_N[0]): angle = - angle
+    if (not rightNeg and ab[0] < m_N[0]): angle = - angle
+    return angle.tolist()
+
+# Calculates joint angle of hip
+def calc_hip_angle_F(hip, knee, rightNeg):
     if(hip == [-1,-1] or knee == [-1,-1]):
         return None # returns this value as error code for no keypoint detection
 
@@ -72,11 +118,11 @@ def calc_hip_angle(hip, knee, rightNeg, isFlex):
     if (rightNeg and ab[0] > m_N[0]): angle = - angle
     if (not rightNeg and ab[0] < m_N[0]): angle = - angle
 
-    if(isFlex): angle = angle * 4/3 # A heuristic for catering for forward/backward pelvic tilt
+    angle = angle * 4/3 # A heuristic for catering for forward/backward pelvic tilt
     return angle.tolist()
 
 # Traversing through pose to compute kinematics
-def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
+def raw_angles_S(data, rightNeg=False, limit=10000, invert = False):
 
     knee_ang_L = []
     knee_ang_R = []
@@ -90,9 +136,9 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
         ankle_L = pose[ptID['ankle_L']]
         hip_L = pose[ptID['hip_L']]
 
-        angle = calc_knee_angle(hip_L, knee_L, ankle_L, rightNeg)
+        angle = calc_knee_angle_S(hip_L, knee_L, ankle_L, rightNeg)
         knee_ang_L.append(angle)
-        angle = calc_hip_angle(hip_L, knee_L, rightNeg, isFlex)
+        angle = calc_hip_angle_S(hip_L, knee_L, rightNeg)
         hip_ang_L.append(angle)
 
         #Right
@@ -100,14 +146,53 @@ def raw_angles(data, rightNeg=False, limit=10000, invert = False, isFlex=False):
         ankle_R = pose[ptID['ankle_R']]
         hip_R = pose[ptID['hip_R']]
 
-        if(invert): angle = calc_knee_angle(hip_R, knee_R, ankle_R, not rightNeg)
-        else: angle = calc_knee_angle(hip_R, knee_R, ankle_R, rightNeg)
-        #angle = outlier_check(knee_ang_R, angle)
+        if(invert): angle = calc_knee_angle_S(hip_R, knee_R, ankle_R, not rightNeg)
+        else: angle = calc_knee_angle_S(hip_R, knee_R, ankle_R, rightNeg)
         knee_ang_R.append(angle)
 
-        if(invert): angle = calc_hip_angle(hip_R, knee_R, not rightNeg, isFlex)
-        else: angle = calc_hip_angle(hip_R, knee_R, rightNeg, isFlex)
-        #angle = outlier_check(hip_ang_R, angle)
+        if(invert): angle = calc_hip_angle_S(hip_R, knee_R, not rightNeg)
+        else: angle = calc_hip_angle_S(hip_R, knee_R, rightNeg)
+        hip_ang_R.append(angle)
+
+        if(count == limit): break
+        count += 1
+
+    knee_ang = [knee_ang_L, knee_ang_R]
+    hip_ang = [hip_ang_L, hip_ang_R]
+
+    return knee_ang, hip_ang
+
+# Traversing through pose to compute kinematics
+def raw_angles_F(data, rightNeg=False, limit=10000, invert = False):
+
+    knee_ang_L = []
+    knee_ang_R = []
+    hip_ang_L = []
+    hip_ang_R = []
+
+    count = 1
+    for pose in data:
+        #Left
+        knee_L = pose[ptID['knee_L']]
+        ankle_L = pose[ptID['ankle_L']]
+        hip_L = pose[ptID['hip_L']]
+
+        angle = calc_knee_angle_F(hip_L, knee_L, ankle_L, rightNeg)
+        knee_ang_L.append(angle)
+        angle = calc_hip_angle_F(hip_L, knee_L, rightNeg)
+        hip_ang_L.append(angle)
+
+        #Right
+        knee_R = pose[ptID['knee_R']]
+        ankle_R = pose[ptID['ankle_R']]
+        hip_R = pose[ptID['hip_R']]
+
+        if(invert): angle = calc_knee_angle_F(hip_R, knee_R, ankle_R, not rightNeg)
+        else: angle = calc_knee_angle_F(hip_R, knee_R, ankle_R, rightNeg)
+        knee_ang_R.append(angle)
+
+        if(invert): angle = calc_hip_angle_F(hip_R, knee_R, not rightNeg)
+        else: angle = calc_hip_angle_F(hip_R, knee_R, rightNeg)
         hip_ang_R.append(angle)
 
         if(count == limit): break
@@ -154,8 +239,8 @@ def kinematics_extract(readFile, writeFile):
         limit = max(lenF, lenS) # Can set to min if the same is desired
         rightNeg = checkGaitDirectionS(dataS, dimS) # True: Right to Left, False: Left to Right
 
-        knee_FlexExt, hip_FlexExt = raw_angles(dataS, rightNeg, limit, isFlex=True)
-        knee_AbdAdd, hip_AbdAdd = raw_angles(dataF, rightNeg, limit=limit, invert=True)
+        knee_FlexExt, hip_FlexExt = raw_angles_S(dataS, rightNeg, limit) # Sagittal plane
+        knee_AbdAdd, hip_AbdAdd = raw_angles_F(dataF, rightNeg, limit, invert=True) # Coronal plane
         jsonDict = {
             'knee_FlexExt' : knee_FlexExt,
             'hip_FlexExt' : hip_FlexExt,
@@ -170,7 +255,7 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 22):
+for i in range(1, 2):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     readFile = path + 'Part' + str(i) + '_pose.json'
