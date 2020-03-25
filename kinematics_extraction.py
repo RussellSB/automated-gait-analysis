@@ -29,7 +29,7 @@ ptID = {
 #==================================================================================
 #                                   Methods
 #==================================================================================
-# Calculates joint angle of knee
+# Calculates joint angle of knee in Side view
 def calc_knee_angle_S(hip, knee, ankle, rightNeg):
     if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
         return None  # returns this value as error code for no keypoint detection
@@ -53,32 +53,7 @@ def calc_knee_angle_S(hip, knee, ankle, rightNeg):
 
     return angle.tolist()
 
-# Calculates joint angle of knee
-def calc_knee_angle_F(hip, knee, ankle, rightNeg):
-    if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
-        return None  # returns this value as error code for no keypoint detection
-
-    # Identifying joint positions
-    a = np.array(hip)
-    b = np.array(knee)
-    c = np.array(ankle)
-
-    # Compute vectors from main joint
-    ba = a - b
-    m_ba = - ba
-    bc = c - b
-
-    cosine_angle = np.dot(m_ba, bc) / (np.linalg.norm(m_ba) * np.linalg.norm(bc))
-    angle = np.arccos(cosine_angle)
-    angle = np.degrees(angle)
-
-    if (rightNeg and bc[0] > m_ba[0]): angle = - angle
-    if (not rightNeg and bc[0] < m_ba[0]): angle = - angle
-
-    angle = angle + 5 # Heuristic catering for perpendicular of pelvis
-    return angle.tolist()
-
-# Calculates joint angle of hip
+# Calculates joint angle of hip in Side view
 def calc_hip_angle_S(hip, knee, rightNeg):
     if(hip == [-1,-1] or knee == [-1,-1]):
         return None # returns this value as error code for no keypoint detection
@@ -99,32 +74,8 @@ def calc_hip_angle_S(hip, knee, rightNeg):
     if (not rightNeg and ab[0] < m_N[0]): angle = - angle
     return angle.tolist()
 
-# Calculates joint angle of hip
-def calc_hip_angle_F(hip, knee, rightNeg):
-    if(hip == [-1,-1] or knee == [-1,-1]):
-        return None # returns this value as error code for no keypoint detection
-
-    # Identifying joint positions
-    a = np.array(hip) # Main joint
-    b = np.array(knee)
-
-    # Compute vectors from joints
-    ab = b - a
-    m_N = np.array([0,-1])
-
-    cosine_angle = np.dot(ab, m_N) / (np.linalg.norm(ab) * np.linalg.norm(m_N))
-    angle = np.arccos(cosine_angle)
-    angle = np.degrees(angle)
-
-    if (rightNeg and ab[0] > m_N[0]): angle = - angle
-    if (not rightNeg and ab[0] < m_N[0]): angle = - angle
-
-    angle = angle * 4/3 - 5 # A heuristic for catering for forward/backward pelvic tilt and perpendicular of pelvis
-    return angle.tolist()
-
-# Traversing through pose to compute kinematics
+# Traversing through pose to compute kinematics in sideView
 def raw_angles_S(data, rightNeg=False, limit=10000):
-
     knee_ang_L = []
     knee_ang_R = []
     hip_ang_L = []
@@ -160,7 +111,55 @@ def raw_angles_S(data, rightNeg=False, limit=10000):
 
     return knee_ang, hip_ang
 
-# Traversing through pose to compute kinematics
+# Calculates joint angle of knee in Front view
+def calc_knee_angle_F(hip, knee, ankle, rightNeg):
+    if (hip == [-1, -1] or knee == [-1, -1] or ankle == [-1,-1]):
+        return None  # returns this value as error code for no keypoint detection
+
+    # Identifying joint positions
+    a = np.array(hip)
+    b = np.array(knee)
+    c = np.array(ankle)
+
+    # Compute vectors from main joint
+    ba = a - b
+    m_ba = - ba
+    bc = c - b
+
+    cosine_angle = np.dot(m_ba, bc) / (np.linalg.norm(m_ba) * np.linalg.norm(bc))
+    angle = np.arccos(cosine_angle)
+    angle = np.degrees(angle)
+
+    if (rightNeg and bc[0] > m_ba[0]): angle = - angle
+    if (not rightNeg and bc[0] < m_ba[0]): angle = - angle
+
+    angle = angle + 5 # Heuristic catering for perpendicular of pelvis
+    return angle.tolist()
+
+# Calculates joint angle of hip in Front view
+def calc_hip_angle_F(hip, knee, rightNeg):
+    if(hip == [-1,-1] or knee == [-1,-1]):
+        return None # returns this value as error code for no keypoint detection
+
+    # Identifying joint positions
+    a = np.array(hip) # Main joint
+    b = np.array(knee)
+
+    # Compute vectors from joints
+    ab = b - a
+    m_N = np.array([0,-1])
+
+    cosine_angle = np.dot(ab, m_N) / (np.linalg.norm(ab) * np.linalg.norm(m_N))
+    angle = np.arccos(cosine_angle)
+    angle = np.degrees(angle)
+
+    if (rightNeg and ab[0] > m_N[0]): angle = - angle
+    if (not rightNeg and ab[0] < m_N[0]): angle = - angle
+
+    angle = angle * 4/3 - 5 # A heuristic for catering for forward/backward pelvic tilt and perpendicular of pelvis
+    return angle.tolist()
+
+# Traversing through pose to compute kinematics in Front view
 def raw_angles_F(data, rightNeg=False, limit=10000):
 
     knee_ang_L = []
