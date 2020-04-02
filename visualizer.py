@@ -257,7 +257,7 @@ def gif_abdadd(poseFile, anglesFile, i, outpath):
     print('Saved as', '\"' + filename + '\"')
 
 # Plots kinematics of left or right leg, used for viewing all gait cycles
-def plot_angles(angleList, title, yrange, isRed):
+def plot_angles(angleList, title, isRed):
     if(isRed): color = red
     else: color = blue
     xmax = len(angleList)
@@ -265,8 +265,19 @@ def plot_angles(angleList, title, yrange, isRed):
     ax.set_title(title)
     ax.set_xlabel('Time (%)')
     ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
     ax.plot(angleList, color=color)
+    plt.show()
+    plt.close()
+
+# Plots kinematics of left or right leg, used for viewing all gait cycles
+def plot_anglesLR(angleList, title, xlabel):
+    xmax = max(len(angleList[0]), len(angleList[1]))
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(r"${\Theta}$ (degrees)")
+    ax.plot(angleList[0], color=red)
+    ax.plot(angleList[1], color=blue)
     plt.show()
     plt.close()
 
@@ -276,12 +287,12 @@ def plot_gc(gc, title, yrange, isRed):
         plot_angles(angleList, title, yrange, isRed)
 
 # Plots left and right gait cycles
-def plot_gcLR(gcLR, title, yrange):
-    plot_gc(gcLR[0], title, yrange, True)
-    plot_gc(gcLR[1], title, yrange, False)
+def plot_gcLR(gcLR, title):
+    plot_gc(gcLR[0], title, True)
+    plot_gc(gcLR[1], title, False)
 
 # Plots average as well as standard deviation
-def plot_avg(avg, std, title, yrange, N, isRed):
+def plot_avg(avg, std, title, N, isRed):
     if (isRed):
         color = red
     else:
@@ -292,7 +303,7 @@ def plot_avg(avg, std, title, yrange, N, isRed):
     ax.set_title(title + ' (' + str(N) + ' Gait Cycles)')
     ax.set_xlabel('Time (%)')
     ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
+    ax.set_xlim(0, 100)
     ax.plot(avg, color=color)
 
     std1_gcL = (np.array(avg) + np.array(std)).tolist()
@@ -301,7 +312,7 @@ def plot_avg(avg, std, title, yrange, N, isRed):
     ax.plot(std2_gcL, '--', color=color)
 
 # Plots left and right average as well as standard deviation
-def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
+def plot_avg_gcLR(avg_LR, title, plotSep):
     avg_gcL = avg_LR['gcL_avg']
     avg_gcR = avg_LR['gcR_avg']
     std_gcL = avg_LR['gcL_std']
@@ -317,14 +328,14 @@ def plot_avg_gcLR(avg_LR, title, yrange, plotSep):
         ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
         ax.set_xlabel('Time (%)')
         ax.set_ylabel(r"${\Theta}$ (degrees)")
-        ax.set(xlim=(0, xmax), ylim=(yrange[0], yrange[1]))
         ax.plot(avg_gcL, color=red)
         ax.plot(avg_gcR, color=blue)
+        ax.set_xlim(0, 100)
         plt.show()
         plt.close()
     else:
-        plot_avg(avg_gcL, std_gcL, title, yrange, N_L, isRed=True)
-        plot_avg(avg_gcR, std_gcR, title, yrange, N_R, isRed=False)
+        plot_avg(avg_gcL, std_gcL, title, N_L, isRed=True)
+        plot_avg(avg_gcR, std_gcR, title, N_R, isRed=False)
         plt.show()
         plt.close()
 
@@ -337,36 +348,37 @@ def plot_avg_gcLR_all(gcFile):
     knee_AbdAdd_avg = gc['knee_AbdAdd_avg']
     hip_AbdAdd_avg = gc['hip_AbdAdd_avg']
 
-    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', (-20, 80), plotSep=False)
-    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', (-20, 60), plotSep=False)
-    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', (-20, 20), plotSep=False)
-    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', (-30, 30), plotSep=False)
+    plot_avg_gcLR(knee_FlexExt_avg, 'Knee Flexion/Extension', plotSep=False)
+    plot_avg_gcLR(hip_FlexExt_avg, 'Hip Flexion/Extension', plotSep=False)
+    plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', plotSep=False)
+    plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', plotSep=False)
 
-    #plot_gcLR(gc['knee_FlexExt_gc'], 'Knee Flexion/Extension', (-20, 80))
-    #plot_gcLR(gc['hip_FlexExt_gc'], 'Hip Flexion/Extension', (-20, 60))
-    #plot_gcLR(gc['knee_AbdAdd_gc'], 'Knee Abduction/Adduction', (-20, 20))
-    #plot_gcLR(gc['hip_AbdAdd_gc'], 'Knee Flexion/Extension', (-20, 80))
+def plot_raw_all(kneeFlexExt, hipFlexExt, kneeAbdAdd, hipAbdAdd):
+    plot_anglesLR(kneeFlexExt, 'Knee Flexion/Extension', 'Frame')
+    plot_anglesLR(hipFlexExt, 'Hip Flexion/Extension', 'Frame')
+    plot_anglesLR(kneeAbdAdd, 'Knee Abduction/Adduction', 'Frame')
+    plot_anglesLR(hipAbdAdd, 'Hip Abduction/Adduction', 'Frame')
 
-#==================================================================================
-#                                   Main
-#==================================================================================
+def plot_raw_all_file(anglesFile, i):
+    with open(anglesFile, 'r') as f:
+        jsonAngles = json.load(f)
+    plot_raw_all(jsonAngles[i]['knee_FlexExt'], jsonAngles[i]['hip_FlexExt'], jsonAngles[i]['knee_AbdAdd'], jsonAngles[i]['hip_AbdAdd'])
 
-while True:
-    i = 21 #input('Enter participant code')
+def main():
+    i = '01'  # input('Enter participant code')
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
     anglesFile = path + 'Part' + str(i) + '_angles.json'
     gcFile = path + 'Part' + str(i) + '_gc.json'
     plot_avg_gcLR_all(gcFile)
-    input()
+    plot_raw_all_file(anglesFile, 2)
 
-#with open(anglesFile, 'r') as f:
-#    jsonAngles = json.load(f)
-#i = 1
-#angleList = jsonAngles[i]['knee_FlexExt'][0]
-#plot_angles(angleList, 'Knee Flexion/Extension', (-20, 80), True)
+    i = 2 # The gait number
+    gif_pose(poseFile, i, path)
+    gif_flexext(poseFile, anglesFile, i, path)
+    gif_abdadd(poseFile, anglesFile, i, path)
 
-#i = 1
-#gif_pose(poseFile, i, path)
-#gif_flexext(poseFile, anglesFile, i, path)
-#gif_abdadd(poseFile, anglesFile, i, path)
+#==================================================================================
+#                                   Main
+#==================================================================================
+# main()

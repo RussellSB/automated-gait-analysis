@@ -8,6 +8,7 @@
 #                                   Imports
 #==================================================================================
 import matplotlib.pyplot as plt
+from visualizer import plot_raw_all, plot_angles
 from scipy import signal
 import pandas as pd
 import numpy as np
@@ -225,21 +226,17 @@ def kinematics_process(poseFile, anglesFile, writeFile):
     knee_AbdAdd_gc = [[], []]
     hip_AbdAdd_gc = [[], []]
 
-    for i in range(0, len1):
+    for i in range(2, 3): # for i in range(0, len1)
         pose_srs = jsonPose[i]
-
         dataS = pose_srs['dataS']
-        dimS = pose_srs['dimS']
-        dataF = pose_srs['dataF']
-        dimF = pose_srs['dimF']
-        lenS = pose_srs['lenS']
 
         raw_angles = jsonAngles[i]
-
         knee_FlexExt = raw_angles['knee_FlexExt']
         hip_FlexExt = raw_angles['hip_FlexExt']
         knee_AbdAdd = raw_angles['knee_AbdAdd']
         hip_AbdAdd = raw_angles['hip_AbdAdd']
+
+        plot_raw_all(knee_FlexExt, hip_FlexExt, knee_AbdAdd, hip_AbdAdd)
 
         # Gap filling
         knee_FlexExt0 = gapfillLR(knee_FlexExt)
@@ -253,6 +250,8 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         hip_FlexExt1 = smoothLR(hip_FlexExt0, weight)
         knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
         hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
+
+        plot_raw_all(knee_FlexExt1, hip_FlexExt1, knee_AbdAdd1, hip_AbdAdd1)
 
         # Slicing into gait cycles
         stepOnFrames_L = getStepOnFrames(dataS, 'L', 8, 0.8) # 8, 0.8
@@ -309,12 +308,12 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 22):
+for i in range(1, 2):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
     anglesFile = path + 'Part' + str(i) + '_angles.json'
-    writeFile = path + 'Part' + str(i) + '_gc.json'
+    writeFile = path + 'TESTX.json' # writeFile = path + 'Part' + str(i) + '_gc.json'
     start_time = time.time()
     kinematics_process(poseFile, anglesFile, writeFile)
     print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
