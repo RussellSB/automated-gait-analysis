@@ -260,10 +260,9 @@ def gif_abdadd(poseFile, anglesFile, i, outpath):
 def plot_angles(angleList, title, isRed):
     if(isRed): color = red
     else: color = blue
-    xmax = len(angleList)
     fig, ax = plt.subplots()
     ax.set_title(title)
-    ax.set_xlabel('Time (%)')
+    ax.set_xlabel('Time (%)') #
     ax.set_ylabel(r"${\Theta}$ (degrees)")
     ax.plot(angleList, color=color)
     plt.show()
@@ -282,9 +281,9 @@ def plot_anglesLR(angleList, title, xlabel):
     plt.close()
 
 # Plots each angle list gait cycle in list
-def plot_gc(gc, title, yrange, isRed):
+def plot_gc(gc, title, isRed):
     for angleList in gc:
-        plot_angles(angleList, title, yrange, isRed)
+        plot_angles(angleList, title, isRed)
 
 # Plots left and right gait cycles
 def plot_gcLR(gcLR, title):
@@ -326,7 +325,7 @@ def plot_avg_gcLR(avg_LR, title, plotSep):
         xmax = max(leftMax, rightMax)
         fig, ax = plt.subplots()
         ax.set_title(title + ' (' + str(N_L) + 'L, ' + str(N_R) + 'R Gait Cycles)')
-        ax.set_xlabel('Time (%)')
+        ax.set_xlabel('Frame') # Time (%)
         ax.set_ylabel(r"${\Theta}$ (degrees)")
         ax.plot(avg_gcL, color=red)
         ax.plot(avg_gcR, color=blue)
@@ -353,6 +352,12 @@ def plot_avg_gcLR_all(gcFile):
     plot_avg_gcLR(knee_AbdAdd_avg, 'Knee Abduction/Adduction', plotSep=False)
     plot_avg_gcLR(hip_AbdAdd_avg, 'Hip Abduction/Adduction', plotSep=False)
 
+    # Uncomment what is necessary for gait cycle display
+    #plot_gcLR(gc['knee_FlexExt_gc'], 'Knee Flexion/Extension')
+    #plot_gcLR(gc['hip_FlexExt_gc'], 'Hip Flexion/Extension')
+    #plot_gcLR(gc['knee_AbdAdd_gc'], 'Knee Abduction/Adduction')
+    #plot_gcLR(gc['hip_AbdAdd_gc'], 'Knee Flexion/Extension')
+
 def plot_raw_all(kneeFlexExt, hipFlexExt, kneeAbdAdd, hipAbdAdd):
     plot_anglesLR(kneeFlexExt, 'Knee Flexion/Extension', 'Frame')
     plot_anglesLR(hipFlexExt, 'Hip Flexion/Extension', 'Frame')
@@ -371,7 +376,7 @@ def main():
     anglesFile = path + 'Part' + str(i) + '_angles.json'
     gcFile = path + 'Part' + str(i) + '_gc.json'
     plot_avg_gcLR_all(gcFile)
-    plot_raw_all_file(anglesFile, 2)
+    plot_raw_all_file(anglesFile, 3)
 
     i = 2 # The gait number
     gif_pose(poseFile, i, path)
