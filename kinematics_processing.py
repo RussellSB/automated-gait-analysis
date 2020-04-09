@@ -115,7 +115,7 @@ def getStepOnFrames(dataS, L_or_R, diff_thresh, N, avg_thresh):
             else:
                 if(isGrounded_avg == 0):
                     seekStepOn = True
-        ankle_points.append(pose[ptID['ankle_' + L_or_R]])
+        ankle_points.append(ankle_pos)
         isGrounded_srs.append(isGrounded)
     return stepOnFrames
 
@@ -248,6 +248,8 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
         hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
+        #plot_raw_all(knee_FlexExt1, hip_FlexExt1, knee_AbdAdd1, hip_AbdAdd1)
+
         # Slicing into gait cycles
         stepOnFrames_L = getStepOnFrames(dataS, 'L', 2.2, 8, 0.8)
         stepOnFrames_R = getStepOnFrames(dataS, 'R', 2.2, 8, 0.8)
@@ -305,7 +307,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 22):
+for i in range(1, 2):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'

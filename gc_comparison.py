@@ -149,3 +149,5 @@ compare_textually(gc_PE, gc_PIG, 'AbdAdd')
 # Using SPM1D on the instances (PiG system in colour)
 compare_visually(gc_PE, gc_PIG, 'FlexExt')
 compare_visually(gc_PE, gc_PIG, 'AbdAdd')
+
+# Simply displaying them visually by mean and standard deviation

@@ -11,6 +11,7 @@ import keras
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.dummy import DummyClassifier
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, GlobalAveragePooling1D
 from keras.layers.convolutional import Conv1D, MaxPooling1D
@@ -24,24 +25,33 @@ from sklearn.preprocessing import LabelEncoder
 #==================================================================================
 #                                   Constants
 #==================================================================================
-LABEL = 'gender'
+# General hyper-parameters
+LABEL = 'abnormality' # options: 'abnormality', 'gender', 'age', 'id'
 BINARY = False
 SPLIT_BY_ID = True
 TEST_SIZE = 0.2
-SEED = 238 #random.randint(1, 1000)
+REPEAT = False # TODO: Repeated readings option (not including cofusion matrix)
+REPEAT_AMOUNT = 10
+SEED = random.randint(1, 1000) # 83
 
-epochs = 30
+# CNN hyper-parameters
+epochs = 100
+filter1 = 101
+filter2 = 162
+kernel = 10
+dropout_rate = 0.5 # 0.3 previously
 
+# more epochs for id than others
 # NOTEWORTHY SEEDS
 ### V. GOOD
-# id: 495 (81%, 81%, 72%)
+# id: 495 (81%, 81%, 72%), 179, 988 # identification needs more epochs and test size
 # gender: 238 (91%, 94%, 66%)
 # abnormality: 168 (97%, 97%, 100%)
-# abnormality: 899 (70%, 70%, 74% - most of whats in test set is normal)
-# abnormality: 577 (98%, 98%, 73%)
+# abnormality: 899 (70%, 70%, 74% - all of whats in test set is normal)
+# abnormality: 577 (98%, 98%, 73%), 588
 
 ### V. BAD
-# abnormality: 854, 791, 267, 617... etc (CNN classifies everything as normal -
+# abnormality: 854, 791, 267, 617, 476, 609, 83... etc (CNN classifies everything as normal -
 #                                               except SVM and LR classify at 70%)
 # age: all.... (around 30%)
 
@@ -70,7 +80,7 @@ def plot_cm(cm, labels, name, cmap, score):
     disp.plot(include_values=True, cmap=cmap)
     plt.xlabel('Predicted ' + LABEL)
     plt.ylabel('True ' + LABEL)
-    plt.title(name + ' (Accuracy: {:.2f})'.format(score))
+    plt.title('Confusion Matrix (Accuracy: {:.2f})'.format(score)) # name
     plt.show()
 
 # Evaluates the keras neural network model w.r.t confusion matrix and ground-truth metrics
@@ -83,18 +93,25 @@ def evaluate_nn_summary(model, X_test, y_test, disp_labels):
     score = sum(y_test == pred) / len(y_test)
     plot_cm(cm, disp_labels, 'CNN', plt.cm.Reds, score)
 
+# Define and Evaluate a baseline model (Dummy classifier)
+def dc(X_train, X_test, y_train, y_test):
+    classifier = DummyClassifier(strategy="most_frequent")
+    classifier.fit(X_train, y_train)
+    evaluate_sk_summary(classifier, X_test, y_test, 'Confusion Matrix', plt.cm.Oranges)
+    return classifier
+
 # Define and Evaluate a Logistic Regression Model
 def lr(X_train, X_test, y_train, y_test):
     classifier = LogisticRegression()
     classifier.fit(X_train, y_train)
-    evaluate_sk_summary(classifier, X_test, y_test, 'LR', plt.cm.Blues)
+    evaluate_sk_summary(classifier, X_test, y_test, 'Confusion Matrix', plt.cm.Blues)
     return classifier
 
-# Define and Evaluate a Logistic Regression Model
+# Define and Evaluate an SVM Model
 def svm(X_train, X_test, y_train, y_test):
     classifier = LinearSVC()
     classifier.fit(X_train, y_train)
-    evaluate_sk_summary(classifier, X_test, y_test, 'SVM', plt.cm.Greens)
+    evaluate_sk_summary(classifier, X_test, y_test, 'Confusion Matrix', plt.cm.Greens)
     return classifier
 
 # Flattens each 8x101 sample to one single long 1x808 vector
@@ -176,7 +193,7 @@ def mlModels(data_train_test):
     #X_train, X_test, y_train, y_test = splitById(X, y, labels_id)
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=SEED)
 
-    return lr(X_train, X_test, y_train, y_test), svm(X_train, X_test, y_train, y_test)
+    return dc(X_train, X_test, y_train, y_test), lr(X_train, X_test, y_train, y_test), svm(X_train, X_test, y_train, y_test)
 
 def nn(data_train_test):
     X_train = data_train_test[0]
@@ -200,20 +217,15 @@ def nn(data_train_test):
     #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
     #y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
 
-    filter1 = 101
-    filter2 = 162
-    kernel = 10
-    dropout_rate = 0.3
-
     n_timesteps, n_features = X_train.shape[1], X_train.shape[2]
 
     # https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
     model_m = Sequential()
     model_m.add(Conv1D(filter1, kernel, activation='relu', input_shape=(n_timesteps, n_features)))
-    model_m.add(Conv1D(filter1, kernel, activation='relu'))
+    # model_m.add(Conv1D(filter1, kernel, activation='relu'))
     model_m.add(MaxPooling1D(3))
     model_m.add(Conv1D(filter2, kernel, activation='relu'))
-    model_m.add(Conv1D(filter2, kernel, activation='relu'))
+    # model_m.add(Conv1D(filter2, kernel, activation='relu'))
     model_m.add(GlobalAveragePooling1D())
     model_m.add(Dropout(dropout_rate))
     model_m.add(Dense(n_outputs, activation='softmax'))
@@ -222,8 +234,6 @@ def nn(data_train_test):
     else: loss = 'categorical_crossentropy'
     model_m.compile(loss=loss,
                     optimizer='adam', metrics=['accuracy'])
-
-    #TODO: Might consider batch and CV, after part sepera
 
     model_m.fit(X_train, y_train, epochs=epochs, verbose=0) # validation_split=TEST_SIZE
     evaluate_nn_summary(model_m, X_test, y_test, disp_labels)
@@ -250,3 +260,4 @@ else:
 mlModels(data_train_test)
 nn(data_train_test)
 print('SEED:', SEED)
+

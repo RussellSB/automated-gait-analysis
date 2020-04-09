@@ -275,8 +275,9 @@ def plot_anglesLR(angleList, title, xlabel):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(r"${\Theta}$ (degrees)")
-    ax.plot(angleList[0], color=red)
-    ax.plot(angleList[1], color=blue)
+    ax.plot(angleList[0], color=red, label='Left')
+    ax.plot(angleList[1], color=blue, label='Right')
+    ax.legend()
     plt.show()
     plt.close()
 
@@ -375,15 +376,15 @@ def main():
     poseFile = path + 'Part' + str(i) + '_pose.json'
     anglesFile = path + 'Part' + str(i) + '_angles.json'
     gcFile = path + 'Part' + str(i) + '_gc.json'
-    plot_avg_gcLR_all(gcFile)
-    plot_raw_all_file(anglesFile, 3)
+    #plot_avg_gcLR_all(gcFile)
+    plot_raw_all_file(anglesFile, 2)
 
-    i = 2 # The gait number
-    gif_pose(poseFile, i, path)
-    gif_flexext(poseFile, anglesFile, i, path)
-    gif_abdadd(poseFile, anglesFile, i, path)
+    #i = 2 # The gait number
+    #gif_pose(poseFile, i, path)
+    #gif_flexext(poseFile, anglesFile, i, path)
+    #gif_abdadd(poseFile, anglesFile, i, path)
 
 #==================================================================================
 #                                   Main
 #==================================================================================
-# main()
+#main()

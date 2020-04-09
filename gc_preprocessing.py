@@ -10,9 +10,7 @@
 import numpy as np
 import json
 import pickle
-import matplotlib.pyplot as plt
 import random
-import math
 
 #==================================================================================
 #                                   Constants
