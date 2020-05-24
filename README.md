@@ -1,5 +1,5 @@
 # Automated-Gait-Analysis
-A human pose estimation system for videos, that aims to extract features describing a gait (walk), with respect to kinematics.
+A human pose estimation system for videos, that aims to extract features describing a gait (walk) and deploy classifiers to detect abnormalities and more, with respect to kinematics.
 This is my final year project for my BSc. Honours in Artificial Intelligence.
 
 ![alt-text](https://github.com/RussellSB/Automated-Gait-Analysis/blob/master/demo/example.gif)
