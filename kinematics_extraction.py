@@ -233,8 +233,8 @@ def kinematics_extract(readFile, writeFile):
         limit = max(lenF, lenS) # Can set to min if the same is desired
         isRightToLeft = checkGaitDirectionS(dataS, dimS) # True: Right to Left, False: Left to Right
 
-        knee_FlexExt, hip_FlexExt = raw_angles_S(dataS, isRightToLeft, limit) # Sagittal plane
-        knee_AbdAdd, hip_AbdAdd = raw_angles_F(dataF, isRightToLeft, limit) # Coronal plane
+        knee_FlexExt, hip_FlexExt = raw_angles_S(dataS, isRightToLeft, limit) # Coronal plane
+        knee_AbdAdd, hip_AbdAdd = raw_angles_F(dataF, isRightToLeft, limit) # Sagittal plane
         jsonDict = {
             'knee_FlexExt' : knee_FlexExt,
             'hip_FlexExt' : hip_FlexExt,
@@ -249,7 +249,7 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 22):
+for i in range(3, 4):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     readFile = path + 'Part' + str(i) + '_pose.json'

@@ -1,7 +1,7 @@
 #==================================================================================
 #                               VISUALIZER
 #----------------------------------------------------------------------------------
-#                           Input: JSON, Output: Plots
+#                    Input: JSON, Output: Debugging plots / Gifs
 #               Visualizes saved graph structure of poses, as well as
 #               saved raw kinematics, and processed kinematics
 #==================================================================================
@@ -371,18 +371,18 @@ def plot_raw_all_file(anglesFile, i):
     plot_raw_all(jsonAngles[i]['knee_FlexExt'], jsonAngles[i]['hip_FlexExt'], jsonAngles[i]['knee_AbdAdd'], jsonAngles[i]['hip_AbdAdd'])
 
 def main():
-    i = '01'  # input('Enter participant code')
+    i = '05'  # input('Enter participant code')
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
     anglesFile = path + 'Part' + str(i) + '_angles.json'
-    gcFile = path + 'Part' + str(i) + '_gc.json'
+    #gcFile = path + 'Part' + str(i) + '_gc.json'
     #plot_avg_gcLR_all(gcFile)
-    plot_raw_all_file(anglesFile, 2)
+    #plot_raw_all_file(anglesFile, 2)
 
-    #i = 2 # The gait number
-    #gif_pose(poseFile, i, path)
-    #gif_flexext(poseFile, anglesFile, i, path)
-    #gif_abdadd(poseFile, anglesFile, i, path)
+    i = 1 # The gait number
+    gif_pose(poseFile, i, path)
+    gif_flexext(poseFile, anglesFile, i, path)
+    gif_abdadd(poseFile, anglesFile, i, path)
 
 #==================================================================================
 #                                   Main

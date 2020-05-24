@@ -14,11 +14,15 @@ from scipy import stats
 import numpy as np
 import math
 
+from statistics import mean
+
 #==================================================================================
 #                                   Constants
 #==================================================================================
-red = "#FF4A7E"
-blue = "#72B6E9"
+red = "#ff002b" # "#FF4A7E"# "#E0082D"
+blue =  "#0077ff" # "#72B6E9" # "#55BED7"#
+red2 =  "#383838" #"#682c8e" #"#ff4800"# "#ff002b"
+blue2 = "#383838" # "#682c8e" # "#0077ff"
 
 #==================================================================================
 #                                   Methods
@@ -46,11 +50,10 @@ def compare_ks(samp1, samp2, title, isLeft):
     print(title+'\t'+LorR+'\t\t'+pval+'\t'+str(0.01)+'\t'+d+'\t'+cv+'\t'+str(isDifferent1)[0]+'\t'+str(isDifferent2)[0])
 
 # Compares textually for either flexion/extension or abduction/adduction with respect to average using kolmo
-def compare_textually(gc_PE, gc_PIG, code):
+def compare_kolmo_all(gc_PE, gc_PIG, code):
     print('===========================================================================')
     print('Title'+'\t\t\t'+'L/R'+'\t\t'+'p'+'\t\t'+'a'+'\t\t'+'D'+'\t\t'+'cv'+'\t\t'+'M1'+'\t'+'M2')
     print('===========================================================================')
-    # TODO: finish off
 
     dict = {}
     dict['pe_knee_L'] = gc_PE['knee_' + code + '_avg']['gcL_avg']
@@ -85,7 +88,7 @@ def compare_spm1d(y0, y1):
     return ti
 
 # Compares visually for either flexion/extension or abduction/adduction with respect to instances using spm1d
-def compare_visually(gc_PE, gc_PIG, code):
+def compare_spm1d_all(gc_PE, gc_PIG, code):
     dict = {}
     dict['pe_knee_L'] = gc_PE['knee_'+code+'_gc'][0]
     dict['pig_knee_L'] = gc_PIG['knee_'+code+'_gc'][0]
@@ -129,25 +132,135 @@ def compare_visually(gc_PE, gc_PIG, code):
             y0 = np.array(dict[key])
         i += 1
 
+# Compare all visually through graph plots
+def compare_visually_all(gc_PE, gc_PIG, code, name):
+    dictAvg = {}
+    dictAvg['pe_knee_L'] = gc_PE['knee_' + code + '_avg']['gcL_avg']
+    dictAvg['pig_knee_L'] = gc_PIG['knee_' + code + '_avg']['gcL_avg']
+    dictAvg['pe_knee_R'] = gc_PE['knee_' + code + '_avg']['gcR_avg']
+    dictAvg['pig_knee_R'] = gc_PIG['knee_' + code + '_avg']['gcR_avg']
+
+    dictAvg['pe_hip_L'] = gc_PE['hip_' + code + '_avg']['gcL_avg']
+    dictAvg['pig_hip_L'] = gc_PIG['hip_' + code + '_avg']['gcL_avg']
+    dictAvg['pe_hip_R'] = gc_PE['hip_' + code + '_avg']['gcR_avg']
+    dictAvg['pig_hip_R'] = gc_PIG['hip_' + code + '_avg']['gcR_avg']
+
+    dictSTD = {}
+    dictSTD['pe_knee_L'] = gc_PE['knee_' + code + '_avg']['gcL_std']
+    dictSTD['pig_knee_L'] = gc_PIG['knee_' + code + '_avg']['gcL_std']
+    dictSTD['pe_knee_R'] = gc_PE['knee_' + code + '_avg']['gcR_std']
+    dictSTD['pig_knee_R'] = gc_PIG['knee_' + code + '_avg']['gcR_std']
+
+    dictSTD['pe_hip_L'] = gc_PE['hip_' + code + '_avg']['gcL_std']
+    dictSTD['pig_hip_L'] = gc_PIG['hip_' + code + '_avg']['gcL_std']
+    dictSTD['pe_hip_R'] = gc_PE['hip_' + code + '_avg']['gcR_std']
+    dictSTD['pig_hip_R'] = gc_PIG['hip_' + code + '_avg']['gcR_std']
+
+    print("PE: {:.0f}L, {:.0f}R".format(
+        gc_PE['knee_' + code + '_avg']['gcL_count'], gc_PE['knee_' + code + '_avg']['gcR_count']))
+    print("PIG: {:.0f}L, {:.0f}R".format(
+        gc_PIG['knee_' + code + '_avg']['gcL_count'], gc_PIG['knee_' + code + '_avg']['gcR_count']))
+
+    isLeft = True
+    color=red
+    color2=red2
+    i = 0
+    for key in dictAvg:
+        if (i % 2):  # COMPARE
+            y1 = dictAvg[key]
+            y1STD = dictSTD[key]
+
+            fig, ax = plt.subplots()
+            side = 'Left ' if(isLeft) else 'Right '
+            title = side + (key.split('_')[1]).capitalize() + ' ' + name
+            ax.set_title(title)
+            ax.set_xlabel('Time (%)')  #
+            ax.set_ylabel(r"${\Theta}$ (degrees)")
+
+            ax.plot(y0, color=color, label='Automated') # mean PE
+            std1 = (np.array(y0) + np.array(y0STD)).tolist()
+            std2 = (np.array(y0) - np.array(y0STD)).tolist()
+            ax.plot(std1, '--', color=color, alpha=0)
+            ax.plot(std2, '--', color=color, alpha=0)
+            ax.fill_between(range(0,101), std1, std2, color=color, alpha=0.15)
+
+            ax.plot(y1, color=color2, label='Marker-based') # mean PIG
+            std1 = (np.array(y1) + np.array(y1STD)).tolist()
+            std2 = (np.array(y1) - np.array(y1STD)).tolist()
+            ax.plot(std1, '--', color=color2, alpha=0)
+            ax.plot(std2, '--', color=color2, alpha=0)
+            ax.fill_between(range(0,101), std1, std2, color=color2, alpha=0.15)
+
+            plt.xlim(0, 100)
+            ax.legend()
+            plt.show()
+            plt.close()
+
+            isLeft = False if isLeft else True
+            color = red if (isLeft) else blue
+            color2 = red2 if (isLeft) else blue2
+        else:
+            y0 = dictAvg[key]
+            y0STD = dictSTD[key]
+        i += 1
+
+def errors_all(gc_PE, gc_PIG, code, name):
+    dictAvg = {}
+    dictAvg['pe_knee_L'] = gc_PE['knee_' + code + '_avg']['gcL_avg']
+    dictAvg['pig_knee_L'] = gc_PIG['knee_' + code + '_avg']['gcL_avg']
+    dictAvg['pe_knee_R'] = gc_PE['knee_' + code + '_avg']['gcR_avg']
+    dictAvg['pig_knee_R'] = gc_PIG['knee_' + code + '_avg']['gcR_avg']
+
+    dictAvg['pe_hip_L'] = gc_PE['hip_' + code + '_avg']['gcL_avg']
+    dictAvg['pig_hip_L'] = gc_PIG['hip_' + code + '_avg']['gcL_avg']
+    dictAvg['pe_hip_R'] = gc_PE['hip_' + code + '_avg']['gcR_avg']
+    dictAvg['pig_hip_R'] = gc_PIG['hip_' + code + '_avg']['gcR_avg']
+
+    i = 0
+    overall_error = []
+    for key in dictAvg:
+        if (i % 2):  # COMPARE
+            y1 = dictAvg[key] # MB
+
+            error = []
+            for n in range(len(y1)):
+                error.append(abs(y1[n] - y0[n]))
+            overall_error += error
+            print("{}\t\t{:.2f}\t{:.2f}\t{:.2f}".format(code+'  '+key[4:], min(error), mean(error), max(error)))
+
+        else:
+            y0 = dictAvg[key] # PE
+        i += 1
+
+    return overall_error
+
 #==================================================================================
 #                                   Main
 #==================================================================================
-i = '01'
+i = '16'
 filePath = '..\\Part'+ i + '\\'
 filePE = filePath + 'Part' + i + '_gc.json'
 filePIG = filePath + 'Part' + i + '_gc_pig.json'
-#filePIG = '..\\Part08\\' + 'Part08_gc.json' # For now, note he has weird knee abd/add
 with open(filePE, 'r') as f:
     gc_PE = json.load(f)
 with open(filePIG, 'r') as f:
     gc_PIG = json.load(f)
 
 # Using Kolmogorov-Smirnoff on the instances
-compare_textually(gc_PE, gc_PIG, 'FlexExt')
-compare_textually(gc_PE, gc_PIG, 'AbdAdd')
+#compare_kolmo_all(gc_PE, gc_PIG, 'FlexExt')
+#compare_kolmo_all(gc_PE, gc_PIG, 'AbdAdd')
 
 # Using SPM1D on the instances (PiG system in colour)
-compare_visually(gc_PE, gc_PIG, 'FlexExt')
-compare_visually(gc_PE, gc_PIG, 'AbdAdd')
+#compare_spm1d_all(gc_PE, gc_PIG, 'FlexExt')
+#compare_spm1d_all(gc_PE, gc_PIG, 'AbdAdd')
 
 # Simply displaying them visually by mean and standard deviation
+compare_visually_all(gc_PE, gc_PIG, 'FlexExt', 'Flexion and Extension')
+compare_visually_all(gc_PE, gc_PIG, 'AbdAdd', 'Abduction and Adduction')
+
+print('KinematicVariable \tMin \tAvg \tMax')
+overall_error = []
+overall_error += errors_all(gc_PE, gc_PIG, 'FlexExt', 'Flexion and Extension')
+overall_error += errors_all(gc_PE, gc_PIG, 'AbdAdd', 'Abduction and Adduction')
+print('=======================================')
+print("Average angle error overall: {:.2f}".format(mean(overall_error)))

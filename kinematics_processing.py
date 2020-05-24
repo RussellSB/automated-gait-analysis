@@ -9,6 +9,7 @@
 #==================================================================================
 import matplotlib.pyplot as plt
 from visualizer import plot_raw_all, plot_gcLR
+from statistics import mean
 from scipy import signal
 import pandas as pd
 import numpy as np
@@ -143,7 +144,8 @@ def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
     len_gc_L = [len(x) for x in gcLR1[0]]
     len_gc_R = [len(x) for x in gcLR1[1]]
     
-    gc_max_LR = [0.7 * max(len_gc_L), 0.7 * max(len_gc_R)]
+    thresh_gc_LR_short = [0.7 * mean(len_gc_L), 0.7 * mean(len_gc_R)]
+    thresh_gc_LR_long = [1.3 * mean(len_gc_L), 1.3 * mean(len_gc_R)]
     
     # Removes from left then right
     for h in range(0, 2):
@@ -151,7 +153,7 @@ def gcLR_removeShort(gcLR1, gcLR2, gcLR3, gcLR4):
         limit = len(gcLR1[h])
         while True:
             len_gc = len(gcLR1[h][i])
-            if(len_gc <= gc_max_LR[h]):
+            if(len_gc <= thresh_gc_LR_short[h] or len_gc >= thresh_gc_LR_long[h]):
                 del gcLR1[h][i]
                 del gcLR2[h][i]
                 del gcLR3[h][i]
@@ -251,7 +253,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         #plot_raw_all(knee_FlexExt1, hip_FlexExt1, knee_AbdAdd1, hip_AbdAdd1)
 
         # Slicing into gait cycles
-        stepOnFrames_L = getStepOnFrames(dataS, 'L', 2.2, 8, 0.8)
+        stepOnFrames_L = getStepOnFrames(dataS, 'L', 2.2, 8, 0.8) # 8
         stepOnFrames_R = getStepOnFrames(dataS, 'R', 2.2, 8, 0.8)
         knee_FlexExt2 = gcLR(knee_FlexExt1, stepOnFrames_L, stepOnFrames_R)
         hip_FlexExt2 = gcLR(hip_FlexExt1, stepOnFrames_L, stepOnFrames_R)
@@ -268,7 +270,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 101)
         hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 101)
 
-        #plot_gcLR(knee_FlexExt3, 'Knee Flexion/Extension')
+        #plot_gcLR(hip_FlexExt2, 'hip flex/ext')
 
         # Adding to global gait cycle instances list
         for gc in knee_FlexExt3[0]: knee_FlexExt_gc[0].append(gc)
@@ -307,7 +309,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 2):
+for i in range(1, 22):
     if(len(str(i)) < 2): i = '0' + str(i)
     path = '..\\Part' + str(i) + '\\'
     poseFile = path + 'Part' + str(i) + '_pose.json'
