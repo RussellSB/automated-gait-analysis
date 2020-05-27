@@ -31,7 +31,7 @@ from tqdm import trange
 LABEL = 'abnormality' # options: 'abnormality', 'gender', 'age', 'id'
 BINARY = True
 SPLIT_BY_ID = True
-SHOW_TEST_IDs = False
+SHOW_TEST_IDs = True
 TEST_SIZE = 0.2
 REPEAT = True
 REPEAT_AMOUNT = 50
@@ -208,7 +208,7 @@ def splitById(X, y, labels_id):
     test_set = list(zip(X_test, y_test))
     random.shuffle(test_set)
     X_test, y_test = zip(*test_set)
-    print('')
+    print(len(y_test))
     return (X_train, X_test, y_train, y_test)
 
 def mlModels(data_train_test):
@@ -216,9 +216,6 @@ def mlModels(data_train_test):
     X_test = flattenData(data_train_test[1])
     y_train = np.array(data_train_test[2])
     y_test = np.array(data_train_test[3])
-
-    #X_train, X_test, y_train, y_test = splitById(X, y, labels_id)
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=SEED)
 
     model_dc = dc(X_train, X_test, y_train, y_test)
     model_lr = lr(X_train, X_test, y_train, y_test)
@@ -244,13 +241,8 @@ def nn(data_train_test):
     y = [*y_train, *y_test]
     n_outputs = len(np.unique(y))
     y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
-
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
-    #y_train = keras.utils.to_categorical(y_train, num_classes=n_outputs)
-
     n_timesteps, n_features = X_train.shape[1], X_train.shape[2]
 
-    # https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
     model_m = Sequential()
     model_m.add(Conv1D(filter1, kernel, activation='relu', input_shape=(n_timesteps, n_features)))
     model_m.add(MaxPooling1D(3))
@@ -271,34 +263,37 @@ def nn(data_train_test):
 #==================================================================================
 #                                   Main
 #==================================================================================
-DATA = 'data' if LABEL != 'abnormality' else 'data_na'
-ID = 'labels_id' if LABEL != 'abnormality' else 'labels_id_na'
+def main():
+    DATA = 'data' if LABEL != 'abnormality' else 'data_na'
+    ID = 'labels_id' if LABEL != 'abnormality' else 'labels_id_na'
 
-with open('..\\classifier_data\\' + DATA + '.pickle', 'rb') as f:
-    data = pickle.load(f)
-with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
-    labels = pickle.load(f)
-with open('..\\classifier_data\\' + ID + '.pickle', 'rb') as f:
-    labels_id = pickle.load(f)
+    with open('..\\classifier_data\\' + DATA + '.pickle', 'rb') as f:
+        data = pickle.load(f)
+    with open('..\\classifier_data\\labels_' + LABEL + '.pickle', 'rb') as f:
+        labels = pickle.load(f)
+    with open('..\\classifier_data\\' + ID + '.pickle', 'rb') as f:
+        labels_id = pickle.load(f)
 
-n = REPEAT_AMOUNT if(REPEAT) else 1
-for _ in trange(n, ncols=100):
-    print()
-    if(REPEAT): SEED = random.randint(1, 1000)
-    if(SPLIT_BY_ID):
-        data_train_test = splitById(data, labels, labels_id)
-    else:
-        data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
+    n = REPEAT_AMOUNT if(REPEAT) else 1
+    for _ in trange(n, ncols=100):
+        print()
+        if(REPEAT): SEED = random.randint(1, 1000)
+        if(SPLIT_BY_ID):
+            data_train_test = splitById(data, labels, labels_id)
+        else:
+            data_train_test = train_test_split(data, labels, test_size=TEST_SIZE, shuffle=True, random_state=SEED)
 
-    mlModels(data_train_test)
-    nn(data_train_test)
-    if(not REPEAT): print('SEED:', SEED)
+        mlModels(data_train_test)
+        nn(data_train_test)
+        if(not REPEAT): print('SEED:', SEED)
 
-if(REPEAT):
-    print("\n,\n,\n,\n,\n, \n,\n,\n,\n,\n, \n,\n,\n,\n,\n")
-    print('==== Average of ', n, ' times  ========== ')
-    print('Base classifier: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_dc) * 100, stdev(acc_dc) * 100))
-    print('Logistic Regression: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_lr) * 100, stdev(acc_lr) * 100))
-    print('Support Vector Machine: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_svm) * 100, stdev(acc_svm) * 100))
-    print('Convolutional Neural Network: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_cnn) * 100, stdev(acc_cnn) * 100))
+    if(REPEAT):
+        print("\n,\n,\n,\n,\n, \n,\n,\n,\n,\n, \n,\n,\n,\n,\n")
+        print('==== Average of ', n, ' times  ========== ')
+        print('Base classifier: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_dc) * 100, stdev(acc_dc) * 100))
+        print('Logistic Regression: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_lr) * 100, stdev(acc_lr) * 100))
+        print('Support Vector Machine: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_svm) * 100, stdev(acc_svm) * 100))
+        print('Convolutional Neural Network: {:.4f} % accuracy with {:.4f} % deviance'.format(mean(acc_cnn) * 100, stdev(acc_cnn) * 100))
 
+if __name__ == '__main__':
+    main()

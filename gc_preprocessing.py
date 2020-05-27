@@ -10,7 +10,6 @@
 import numpy as np
 import json
 import pickle
-import random
 
 #==================================================================================
 #                                   Constants
@@ -79,100 +78,72 @@ def getgc_glob(gc_PE):
     print(len(kinematics))
     return kinematics
 
-# Returns a list of n 2d arrays that artificially simulate abnormal gait cycles
-def get_gcart(n):
-    kinematics_artificial = []
-
-    for _ in range(0, n):
-        arr2d = []
-
-        k = [1 / 4, 1 / 2, 1, 2]  # Constants for xrange
-        x = np.linspace(0, 12.5 * random.choice(k), 101)
-        noise = np.random.normal(0, 0.1, 101)
-
-        knee_FlexExt = np.sin(x) * 30 + noise + 30
-        hip_FlexExt = np.cos(x) * 30 + noise + 10
-        knee_AbdAdd = np.sin(x) * 5 + noise + 5
-        hip_AbdAdd = np.sin(x) * 10 + noise
-
-        for _ in range(0,2): arr2d.append(knee_FlexExt)
-        for _ in range(0, 2): arr2d.append(hip_FlexExt)
-        for _ in range(0, 2): arr2d.append(knee_AbdAdd)
-        for _ in range(0, 2): arr2d.append(hip_AbdAdd)
-
-        arr2d = np.array(arr2d)
-        kinematics_artificial.append(arr2d)
-    return kinematics_artificial
-
 #==================================================================================
 #                                   Main
 #==================================================================================
-data = []
-labels_id = []
-labels_age = []
-labels_gen = []
+def main():
+    data = []
+    labels_id = []
+    labels_age = []
+    labels_gen = []
 
-data_na = []
-labels_na = []
-labels_id_na = []
+    data_na = []
+    labels_na = []
+    labels_id_na = []
 
-# Prepares gait data collected from the lab
-for i in range(1, 22):
-    id = str(i)
-    id = '0' + id if len(id) < 2 else i
-    part = 'Part' + str(id)
+    # Prepares gait data collected from the lab
+    for i in range(1, 22):
+        id = str(i)
+        id = '0' + id if len(id) < 2 else i
+        part = 'Part' + str(id)
 
-    file = '..\\' + part + '\\' + part + '_gc.json'
-    with open(file, 'r') as f:
-        gc_PE = json.load(f)
+        file = '..\\' + part + '\\' + part + '_gc.json'
+        with open(file, 'r') as f:
+            gc_PE = json.load(f)
 
-    kinematics = getgc_glob(gc_PE)
+        kinematics = getgc_glob(gc_PE)
 
-    for gc in kinematics:
-        na = partInfo[str(i)][0]
-        #na = 0 if na == 'N' else 1
-        na = 'Normal' if na == 'N' else 'Abnormal'
+        for gc in kinematics:
+            na = partInfo[str(i)][0]
+            #na = 0 if na == 'N' else 1
+            na = 'Normal' if na == 'N' else 'Abnormal'
 
-        gen = partInfo[str(i)][2]
-        #gen = 0 if gen == 'F' else 1
-        gen = 'Female' if gen == 'F' else 'Male'
+            gen = partInfo[str(i)][2]
+            #gen = 0 if gen == 'F' else 1
+            gen = 'Female' if gen == 'F' else 'Male'
 
-        age = partInfo[str(i)][1]
+            age = partInfo[str(i)][1]
 
-        # Separate abnormal/normal set from normal set
-        if(na=='Abnormal'):
-            data_na.append(gc)
-            labels_na.append(na)
-            labels_id_na.append(i)
-        else:
-            data.append(gc)
-            labels_id.append(i)
-            labels_age.append(age)
-            labels_gen.append(gen)
+            # Separate abnormal/normal set from normal set
+            if(na=='Abnormal'):
+                data_na.append(gc)
+                labels_na.append(na)
+                labels_id_na.append(i)
+            else:
+                data.append(gc)
+                labels_id.append(i)
+                labels_age.append(age)
+                labels_gen.append(gen)
 
-            data_na.append(gc)
-            labels_na.append(na)
-            labels_id_na.append(i)
+                data_na.append(gc)
+                labels_na.append(na)
+                labels_id_na.append(i)
 
-# Prepares artificial gait data simulating abnormalities
-#kinematics_artificial = get_gcart(int(len(data)/2))
-#data_na = [x for x in data]
-#for gc in kinematics_artificial:
-#    data_na.append(gc)
-#    labels_na.append('Abnormal')
+    with open('..\\classifier_data\\data.pickle', 'wb') as f:
+        pickle.dump(data, f)
+    with open('..\\classifier_data\\labels_id.pickle', 'wb') as f:
+        pickle.dump(labels_id, f)
+    with open('..\\classifier_data\\labels_age.pickle', 'wb') as f:
+        pickle.dump(labels_age, f)
+    with open('..\\classifier_data\\labels_gender.pickle', 'wb') as f:
+        pickle.dump(labels_gen, f)
 
-with open('..\\classifier_data\\data.pickle', 'wb') as f:
-    pickle.dump(data, f)
-with open('..\\classifier_data\\labels_id.pickle', 'wb') as f:
-    pickle.dump(labels_id, f)
-with open('..\\classifier_data\\labels_age.pickle', 'wb') as f:
-    pickle.dump(labels_age, f)
-with open('..\\classifier_data\\labels_gender.pickle', 'wb') as f:
-    pickle.dump(labels_gen, f)
+    with open('..\\classifier_data\\data_na.pickle', 'wb') as f:
+        pickle.dump(data_na, f)
+    with open('..\\classifier_data\\labels_id_na.pickle', 'wb') as f:
+        pickle.dump(labels_id_na, f)
+    with open('..\\classifier_data\\labels_abnormality.pickle', 'wb') as f:
+        pickle.dump(labels_na, f)
 
-with open('..\\classifier_data\\data_na.pickle', 'wb') as f:
-    pickle.dump(data_na, f)
-with open('..\\classifier_data\\labels_id_na.pickle', 'wb') as f:
-    pickle.dump(labels_id_na, f)
-with open('..\\classifier_data\\labels_abnormality.pickle', 'wb') as f:
-    pickle.dump(labels_na, f)
+if __name__ == '__main__':
+    main()

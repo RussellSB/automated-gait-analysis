@@ -6,7 +6,6 @@
 #               walking, this will generate a json, describing the pose
 #               via key-points in graph form, throughout every frame.
 #==================================================================================
-# TODO: Later expand to store more than just one pair of videos per person (for average)
 
 #==================================================================================
 #                                   Imports
@@ -153,11 +152,14 @@ def estimate_poses(path, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(18, 22):
-    path = '..\\Part' + str(i) + '\\'
-    writeFile = path + 'Part' + str(i) + '_pose.json'
-    start_time = time.time()
-    estimate_poses(path, writeFile)
-    print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+def main():
+    for i in range(1, 22):
+        if (len(str(i)) < 2): i = '0' + str(i)
+        path = '..\\Part' + str(i) + '\\'
+        writeFile = path + 'Part' + str(i) + '_pose.json'
+        start_time = time.time()
+        estimate_poses(path, writeFile)
+        print('Poses estimated and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
 
-# [13-18) 5 participants
+if __name__ == '__main__':
+    main()

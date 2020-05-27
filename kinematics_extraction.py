@@ -249,11 +249,15 @@ def kinematics_extract(readFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(3, 4):
-    if(len(str(i)) < 2): i = '0' + str(i)
-    path = '..\\Part' + str(i) + '\\'
-    readFile = path + 'Part' + str(i) + '_pose.json'
-    writeFile = path + 'Part' + str(i) + '_angles.json'
-    start_time = time.time()
-    kinematics_extract(readFile, writeFile)
-    print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+def main():
+    for i in range(1, 22):
+        if(len(str(i)) < 2): i = '0' + str(i)
+        path = '..\\Part' + str(i) + '\\'
+        readFile = path + 'Part' + str(i) + '_pose.json'
+        writeFile = path + 'Part' + str(i) + '_angles.json'
+        start_time = time.time()
+        kinematics_extract(readFile, writeFile)
+        print('Kinematics extracted and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+
+if __name__ == '__main__':
+    main()

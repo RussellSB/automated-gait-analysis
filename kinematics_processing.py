@@ -7,8 +7,8 @@
 #==================================================================================
 #                                   Imports
 #==================================================================================
-import matplotlib.pyplot as plt
-from visualizer import plot_raw_all, plot_gcLR
+# import matplotlib.pyplot as plt  # for debugging
+# from visualizer import plot_raw_all, plot_gcLR  # for debugging
 from statistics import mean
 from scipy import signal
 import pandas as pd
@@ -227,7 +227,8 @@ def kinematics_process(poseFile, anglesFile, writeFile):
     knee_AbdAdd_gc = [[], []]
     hip_AbdAdd_gc = [[], []]
 
-    for i in range(0, len1): # for i in range(2,3): #
+    # Traverse through each capture of the participant's gait
+    for i in range(0, len1):
         pose_srs = jsonPose[i]
         dataS = pose_srs['dataS']
 
@@ -250,7 +251,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         knee_AbdAdd1 = smoothLR(knee_AbdAdd0, weight)
         hip_AbdAdd1 = smoothLR(hip_AbdAdd0, weight)
 
-        #plot_raw_all(knee_FlexExt1, hip_FlexExt1, knee_AbdAdd1, hip_AbdAdd1)
+        #plot_raw_all(knee_FlexExt1, hip_FlexExt1, knee_AbdAdd1, hip_AbdAdd1)  # for debugging
 
         # Slicing into gait cycles
         stepOnFrames_L = getStepOnFrames(dataS, 'L', 2.2, 8, 0.8) # 8
@@ -270,7 +271,7 @@ def kinematics_process(poseFile, anglesFile, writeFile):
         knee_AbdAdd3 = resample_gcLR(knee_AbdAdd2, 101)
         hip_AbdAdd3 = resample_gcLR(hip_AbdAdd2, 101)
 
-        #plot_gcLR(hip_FlexExt2, 'hip flex/ext')
+        #plot_gcLR(hip_FlexExt2, 'hip flex/ext')  # for debugging
 
         # Adding to global gait cycle instances list
         for gc in knee_FlexExt3[0]: knee_FlexExt_gc[0].append(gc)
@@ -309,12 +310,16 @@ def kinematics_process(poseFile, anglesFile, writeFile):
 #==================================================================================
 #                                   Main
 #==================================================================================
-for i in range(1, 22):
-    if(len(str(i)) < 2): i = '0' + str(i)
-    path = '..\\Part' + str(i) + '\\'
-    poseFile = path + 'Part' + str(i) + '_pose.json'
-    anglesFile = path + 'Part' + str(i) + '_angles.json'
-    writeFile = path + 'Part' + str(i) + '_gc.json'
-    start_time = time.time()
-    kinematics_process(poseFile, anglesFile, writeFile)
-    print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+def main():
+    for i in range(1, 22):
+        if(len(str(i)) < 2): i = '0' + str(i)
+        path = '..\\Part' + str(i) + '\\'
+        poseFile = path + 'Part' + str(i) + '_pose.json'
+        anglesFile = path + 'Part' + str(i) + '_angles.json'
+        writeFile = path + 'Part' + str(i) + '_gc.json'
+        start_time = time.time()
+        kinematics_process(poseFile, anglesFile, writeFile)
+        print('Kinematics processed and saved in', '\"'+writeFile+'\"', '[Time:', '{0:.2f}'.format(time.time() - start_time), 's]')
+
+if __name__ == '__main__':
+    main()
