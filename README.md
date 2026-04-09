@@ -23,5 +23,5 @@ Third step: Process kinematics. The processing pipeline follows: gap filling, sm
 
 ## Publication
 Anyone interested in further details can read the full BSc report published on the University of Malta's Open Access Repository:
-[Automated Gait Analysis – University of Malta OAR](https://www.um.edu.mt/library/oar/handle/123456789/64176)
+[BSc Thesis Report](https://www.um.edu.mt/library/oar/handle/123456789/64176)
 
