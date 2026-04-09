@@ -21,3 +21,7 @@ Second step: Extract raw angle kinematics. As demonstrated above knee flexion an
 </p>
 Third step: Process kinematics. The processing pipeline follows: gap filling, smoothing, gait cycle slicing, resampling and finally averaging. Demonstrating above, we see a smoothed gait cycle, an average of all gait cycles in one capture, and an average of all gait cycles in six captures (three walking left ot right and another three walking right to left).
 
+## Publication
+Anyone interested in further details can read the full BSc report published on the University of Malta's Open Access Repository:
+[BSc Thesis Report](https://www.um.edu.mt/library/oar/handle/123456789/64176)
+
